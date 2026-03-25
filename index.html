@@ -113,32 +113,42 @@ html, body {
 
 /* ── Voice label ─────────────────────────────────── */
 .voice-label {
-  position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  /* 關鍵修改：調整 bottom 數值 */
-  /* 55dvh 大約是在畫面中間偏上的位置，剛好在球的上方 */
-  bottom: 75dvh; 
-  z-index: 4;
-  display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(0,0,0,0.6); /* 稍微調透明一點，比較有科技感 */
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 5px; /* 改成橢圓形，跟球體視覺更和諧 */
-  padding: 6px 16px;
-  font-size: 11px;
-  font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 300;
-  letter-spacing: 0.08em;
-  color: #fff;
-  min-width: 140px;
+  /* 改為相對位置，它會出現在文字下方、球體上方 */
+  display: inline-flex; 
+  align-items: center; 
   justify-content: center;
+  gap: 8px;
+  
+  /* 間距控制：讓它與上方文字保持一點距離 */
+  margin-top: 20px; 
+  
+  background: rgba(255, 255, 255, 0.1); 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 6px 18px;
+  
+  font-size: 11px;
+  color: #fff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  white-space: nowrap;
+  
+  /* 確保它不會被球遮住 */
+  position: relative;
+  z-index: 5;
+  
+  /* 讓文字切換時平滑一點 */
+  transition: all 0.3s ease;
+}
+
+/* 調整原本的 greeting 區塊，確保它垂直排列 */
+.greeting {
+  margin-top: 52px;
   text-align: center;
   pointer-events: none;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px); /* 增加 Safari 相容性 */
-  white-space: nowrap;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* 增加一點陰影，讓它浮起來 */
-  transition: all 0.3s ease; /* 讓狀態切換時有一點平滑過渡 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 .voice-label.state-idle    { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
 .voice-label.state-listen  { color: #ff4444; border-color: rgba(255,68,68,0.4); }
@@ -603,14 +613,13 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
     </div>
   </div>
 
-  <div class="greeting">
-    <h2 id="greetingText">Gotour AI 智慧小助手</h2>
-    
+<div class="greeting">
+  <h2 id="greetingText">Gotour AI 智慧小助手</h2>
+  <div class="voice-label state-idle" id="voiceLabel">
+    <span class="status-dot-sm"></span>
+    <span id="voiceLabelText">點擊球球詢問問題</span>
   </div>
-
-  <div class="orb-spacer"></div>
-
-  <div class="voice-label state-idle" id="voiceLabel"><span class="status-dot-sm"></span><span id="voiceLabelText">點擊球球詢問問題</span></div>
+</div>
 
   <div class="bottom-bar">
     <div class="tab-bar">
