@@ -3,187 +3,401 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>臺史博 AI 語音助理</title>
+<title>臺史博 AI 助理</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400&display=swap');
 
 :root {
-  --bg: #0e0e0e;
-  --surface: #1a1a1a;
-  --surface2: #232323;
-  --border: #2e2e2e;
-  --accent: #c9a96e;
-  --accent-dim: rgba(201,169,110,0.12);
-  --text: #e8e2d9;
-  --text-muted: #888;
-  --text-dim: #444;
-  --user-bubble: #1a2a1a;
-  --user-border: #253525;
-  --header-h: 60px;
-  --input-h: 80px;
+  --bg-top: #0a0a1a;
+  --bg-bot: #0d0d1f;
+  --blob1: #6366f1;
+  --blob2: #8b5cf6;
+  --blob3: #a78bfa;
+  --blob4: #c4b5fd;
+  --text: #f0eeff;
+  --text-dim: rgba(240,238,255,0.45);
+  --drawer-bg: rgba(10,10,28,0.92);
+  --drawer-border: rgba(139,92,246,0.2);
+  --surface: rgba(255,255,255,0.05);
+  --surface2: rgba(255,255,255,0.08);
+  --accent: #a78bfa;
+  --accent-glow: rgba(167,139,250,0.3);
+  --user-bubble: rgba(99,102,241,0.2);
+  --user-border: rgba(99,102,241,0.35);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 html, body {
   height: 100%; height: 100dvh;
-  background: var(--bg);
+  background: var(--bg-top);
   color: var(--text);
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 300;
   overflow: hidden;
+  user-select: none;
 }
 
-/* ── Layout ─────────────────────────────────────────── */
+/* ── Background ───────────────────────────────────────── */
+.bg {
+  position: fixed; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse at 75% 70%, rgba(139,92,246,0.15) 0%, transparent 55%),
+              linear-gradient(160deg, #0a0a1e 0%, #0d0818 100%);
+}
+
+/* ── App shell ────────────────────────────────────────── */
 .app {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  height: 100dvh;
+  position: relative; z-index: 1;
+  height: 100%; height: 100dvh;
+  display: flex; flex-direction: column;
+  align-items: center;
 }
 
-/* ── Header ─────────────────────────────────────────── */
+/* ── Header ───────────────────────────────────────────── */
 .header {
-  height: var(--header-h);
-  min-height: var(--header-h);
-  padding: 0 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  width: 100%; padding: 18px 24px 0;
+  display: flex; align-items: center; justify-content: space-between;
   flex-shrink: 0;
 }
-
+.header-logo {
+  display: flex; align-items: center; gap: 9px;
+}
 .logo-mark {
-  width: 36px; height: 36px;
-  background: var(--accent);
-  border-radius: 8px;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, var(--blob1), var(--blob2));
   display: flex; align-items: center; justify-content: center;
   font-family: 'Noto Serif TC', serif;
-  font-size: 16px; color: #0e0e0e; font-weight: 600;
-  flex-shrink: 0;
+  font-size: 13px; color: #fff; font-weight: 600;
 }
-
-.header-text h1 {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 15px; font-weight: 600; letter-spacing: 0.04em;
+.logo-text {
+  font-size: 13px; font-weight: 400;
+  color: var(--text-dim); letter-spacing: 0.06em;
 }
-.header-text p {
-  font-size: 10px; color: var(--text-muted);
-  margin-top: 1px; letter-spacing: 0.06em;
-}
-
-.header-right {
-  margin-left: auto;
-  display: flex; align-items: center; gap: 10px;
-}
-
 .status-pill {
-  display: flex; align-items: center; gap: 6px;
+  display: flex; align-items: center; gap: 5px;
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 10px;
-  font-size: 11px; color: var(--text-muted);
+  border: 1px solid var(--drawer-border);
+  border-radius: 20px; padding: 5px 10px;
+  font-size: 10px; color: var(--text-dim);
+  backdrop-filter: blur(10px);
 }
 .status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: #4caf82;
-  box-shadow: 0 0 5px rgba(76,175,130,0.7);
-  animation: pulse 2.5s ease-in-out infinite;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74,222,128,0.8);
+  animation: statusPulse 2.5s ease-in-out infinite;
+}
+@keyframes statusPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Greeting ─────────────────────────────────────────── */
+.greeting {
+  margin-top: 32px;
+  text-align: center;
   flex-shrink: 0;
 }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+.greeting h2 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 22px; font-weight: 600;
+  letter-spacing: 0.04em; line-height: 1.4;
+}
+.greeting p {
+  font-size: 12px; color: var(--text-dim);
+  margin-top: 6px; letter-spacing: 0.05em;
+}
 
-/* ── Suggestions ─────────────────────────────────────── */
-.suggestions {
-  padding: 12px 16px 0;
-  display: flex; flex-wrap: wrap; gap: 7px;
-  flex-shrink: 0;
-}
-.suggest-label {
-  width: 100%; font-size: 10px;
-  color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 2px;
-}
-.suggestion-btn {
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--text-muted); font-family: 'Noto Sans TC', sans-serif;
-  font-size: 11px; padding: 6px 12px; border-radius: 20px;
-  cursor: pointer; transition: all 0.2s; white-space: nowrap;
-  font-weight: 300; -webkit-appearance: none;
-}
-.suggestion-btn:active,
-.suggestion-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
-
-/* ── Chat area ───────────────────────────────────────── */
-.chat-area {
+/* ── Blob stage ───────────────────────────────────────── */
+.blob-stage {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Outer glow ring */
+.blob-glow {
+  position: absolute;
+  width: 260px; height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%);
+  animation: glowPulse 3s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes glowPulse {
+  0%,100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* Main blob SVG wrapper */
+.blob-wrap {
+  position: relative;
+  width: 200px; height: 200px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+.blob-wrap:active { transform: scale(0.96); }
+
+.blob-svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 0 30px rgba(139,92,246,0.5));
+  overflow: visible;
+}
+
+/* Blob eyes */
+.blob-eyes {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -54%);
+  display: flex; gap: 18px; align-items: center;
+  pointer-events: none;
+}
+.eye {
+  width: 10px; height: 13px;
+  background: rgba(255,255,255,0.9);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  position: relative;
+  animation: eyeBlink 6s ease-in-out infinite;
+}
+.eye::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 3px; height: 3px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 50%;
+}
+@keyframes eyeBlink {
+  0%,93%,97%,100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.05); }
+}
+
+/* ── Blob states ──────────────────────────────────────── */
+/* Idle: slow float + look-around */
+.blob-wrap.idle .blob-path {
+  animation: blobIdle 4s ease-in-out infinite, blobLook 8s ease-in-out infinite;
+}
+/* Listening: pulse big */
+.blob-wrap.listening .blob-path {
+  animation: blobListen 0.6s ease-in-out infinite alternate;
+}
+.blob-wrap.listening { filter: drop-shadow(0 0 40px rgba(99,102,241,0.8)); }
+/* Speaking: fast wobble */
+.blob-wrap.speaking .blob-path {
+  animation: blobSpeak 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes blobIdle {
+  0%,100% { transform: translateY(0) scale(1,1); }
+  25% { transform: translateY(-8px) scale(1.02, 0.98); }
+  50% { transform: translateY(-4px) scale(0.98, 1.02); }
+  75% { transform: translateY(-10px) scale(1.01, 0.99); }
+}
+@keyframes blobLook {
+  0%,20% { transform: translateX(0); }
+  30%,45% { transform: translateX(-14px); }
+  55%,70% { transform: translateX(14px); }
+  80%,100% { transform: translateX(0); }
+}
+@keyframes blobListen {
+  from { transform: scale(1); filter: brightness(1); }
+  to   { transform: scale(1.08); filter: brightness(1.2); }
+}
+@keyframes blobSpeak {
+  from { transform: scale(1, 1) rotate(-1deg); }
+  to   { transform: scale(1.04, 0.97) rotate(1deg); }
+}
+
+/* Eye reactions */
+.blob-wrap.listening .eye { height: 14px; width: 12px; }
+.blob-wrap.speaking .eye {
+  height: 8px; border-radius: 40%;
+  animation: eyeTalk 0.3s ease-in-out infinite alternate;
+}
+@keyframes eyeTalk { from { height: 10px; } to { height: 5px; } }
+
+/* Mic tap hint */
+.mic-hint {
+  position: absolute;
+  bottom: -36px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: var(--text-dim);
+  white-space: nowrap; letter-spacing: 0.06em;
+  animation: hintFade 3s ease-in-out infinite;
+}
+@keyframes hintFade { 0%,100%{opacity:0.4} 50%{opacity:0.9} }
+
+/* Voice status ring */
+.voice-ring {
+  position: absolute;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.voice-ring.active {
+  opacity: 1;
+  border-color: rgba(167,139,250,0.5);
+  animation: ringPulse 1s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { transform: scale(1); opacity: 0.5; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+/* ── Bottom bar ───────────────────────────────────────── */
+.bottom-bar {
+  width: 100%; padding: 16px 24px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 20px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-bar { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* Chat tab button */
+.chat-tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: none; border: none; cursor: pointer;
+  padding: 8px 12px; border-radius: 12px;
+  transition: background 0.2s;
+  color: var(--text-dim);
+}
+.chat-tab-btn:active { background: var(--surface); }
+.chat-tab-btn svg { width: 22px; height: 22px; }
+.chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; }
+.chat-tab-btn.has-messages .tab-icon-wrap {
+  position: relative;
+}
+.chat-tab-btn.has-messages::after {
+  content: '';
+  position: absolute;
+  top: 6px; right: 10px;
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* ── Drawer ───────────────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 8;
+  background: rgba(0,0,0,0.3);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.35s ease;
+  backdrop-filter: blur(2px);
+}
+.drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+.drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+  height: 64%;
+  background: var(--drawer-bg);
+  border-top: 1px solid var(--drawer-border);
+  border-radius: 22px 22px 0 0;
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+  will-change: transform;
+}
+.drawer.open { transform: translateY(0); }
+
+/* Drawer handle */
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* Drawer header */
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px 8px;
+  flex-shrink: 0;
+}
+.drawer-title {
+  font-size: 13px; color: var(--text-dim);
+  letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 6px;
+}
+.drawer-title svg { width: 13px; height: 13px; opacity: 0.6; }
+.drawer-close-btn {
+  background: var(--surface); border: none; cursor: pointer;
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim); transition: background 0.2s;
+}
+.drawer-close-btn:active { background: var(--surface2); }
+.drawer-close-btn svg { width: 14px; height: 14px; }
+
+/* Chat messages */
+.chat-area {
+  flex: 1; overflow-y: auto;
+  padding: 8px 16px 12px;
+  display: flex; flex-direction: column; gap: 14px;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
-.chat-area::-webkit-scrollbar { width: 3px; }
-.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.chat-area::-webkit-scrollbar { width: 0; }
 
-/* ── Welcome ─────────────────────────────────────────── */
-.welcome {
-  text-align: center;
-  padding: 24px 12px;
-  animation: fadeUp 0.4s ease;
+/* Empty state */
+.chat-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; padding: 20px;
+  opacity: 0; animation: fadeIn 0.4s 0.2s ease forwards;
 }
-.welcome-icon { font-size: 32px; margin-bottom: 12px; }
-.welcome h2 {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 17px; font-weight: 600;
-  margin-bottom: 8px; letter-spacing: 0.04em;
-}
-.welcome p {
-  font-size: 12px; color: var(--text-muted);
-  line-height: 1.9; max-width: 280px; margin: 0 auto;
-}
-.welcome-divider { width: 32px; height: 1px; background: var(--accent); margin: 12px auto; opacity: 0.4; }
+@keyframes fadeIn { to { opacity: 1; } }
+.chat-empty p { font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.8; }
 
-.voice-hint {
-  display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 7px 14px;
-  font-size: 11px; color: var(--text-muted);
+/* Suggestions */
+.suggestion-chips {
+  display: flex; flex-wrap: wrap; gap: 7px;
+  padding: 0 16px 10px;
+  flex-shrink: 0;
 }
+.chip-btn {
+  background: var(--surface); border: 1px solid var(--drawer-border);
+  color: var(--text-dim); font-family: 'Noto Sans TC', sans-serif;
+  font-size: 11px; padding: 6px 12px; border-radius: 20px;
+  cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  -webkit-appearance: none;
+}
+.chip-btn:active { border-color: var(--accent); color: var(--accent); background: rgba(167,139,250,0.1); }
 
-/* ── Messages ────────────────────────────────────────── */
-.msg { display: flex; gap: 8px; animation: fadeUp 0.25s ease; }
+/* Messages */
+.msg { display: flex; gap: 8px; animation: msgIn 0.25s ease; }
 .msg.user { flex-direction: row-reverse; }
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
+@keyframes msgIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
 .avatar {
-  width: 28px; height: 28px; border-radius: 7px;
-  flex-shrink: 0; display: flex;
-  align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 500; margin-top: 2px;
+  width: 26px; height: 26px; border-radius: 8px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 500; margin-top: 2px;
 }
-.avatar.bot { background: var(--accent); color: #0e0e0e; font-family: 'Noto Serif TC', serif; }
-.avatar.user { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+.avatar.bot {
+  background: linear-gradient(135deg, var(--blob1), var(--blob2));
+  color: #fff; font-family: 'Noto Serif TC', serif;
+}
+.avatar.user { background: var(--surface2); color: var(--text-dim); }
 
 .bubble {
-  max-width: calc(100% - 80px);
-  padding: 11px 14px;
-  font-size: 14px; line-height: 1.8; font-weight: 300;
-  border-radius: 14px;
-  word-break: break-word;
+  max-width: calc(100% - 72px);
+  padding: 10px 13px; font-size: 13.5px; line-height: 1.8;
+  border-radius: 14px; word-break: break-word;
 }
 .bubble.bot {
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--drawer-border);
   color: var(--text); border-top-left-radius: 3px;
 }
 .bubble.user {
@@ -191,211 +405,224 @@ html, body {
   color: var(--text); border-top-right-radius: 3px;
 }
 .bubble.error {
-  background: rgba(180,60,60,0.1); border: 1px solid rgba(180,60,60,0.2);
-  color: #e09090;
+  background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2);
+  color: #fca5a5;
 }
 
-.source-tag {
-  display: inline-block; margin-top: 8px;
-  font-size: 10px; color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid rgba(201,169,110,0.2);
-  padding: 2px 8px; border-radius: 20px; letter-spacing: 0.04em;
-}
-
-/* ── Typing ──────────────────────────────────────────── */
+/* Typing dots */
 .typing { display: flex; gap: 8px; align-items: flex-end; }
 .typing-dots {
-  background: var(--surface); border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--drawer-border);
   border-top-left-radius: 3px; border-radius: 14px;
-  padding: 13px 16px; display: flex; gap: 4px; align-items: center;
+  padding: 12px 16px; display: flex; gap: 4px; align-items: center;
 }
 .typing-dots span {
-  width: 5px; height: 5px;
-  background: var(--text-muted); border-radius: 50%;
-  animation: bounce 1.2s ease-in-out infinite;
+  width: 5px; height: 5px; background: var(--text-dim);
+  border-radius: 50%; animation: tdBounce 1.2s infinite;
 }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce {
+@keyframes tdBounce {
   0%,60%,100% { transform: translateY(0); opacity: 0.4; }
   30% { transform: translateY(-5px); opacity: 1; }
 }
 
-/* ── Input area ──────────────────────────────────────── */
-.input-area {
-  padding: 12px 16px 16px;
-  border-top: 1px solid var(--border);
+/* ── Drawer Input ─────────────────────────────────────── */
+.drawer-input-area {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--drawer-border);
   flex-shrink: 0;
-  background: var(--bg);
 }
-
-/* Safe area for iPhone home bar */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .input-area { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .drawer-input-area { padding-bottom: calc(14px + env(safe-area-inset-bottom)); }
 }
-
-.input-wrap {
+.drawer-input-wrap {
   display: flex; gap: 8px; align-items: flex-end;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 10px 12px;
+  background: var(--surface); border: 1px solid var(--drawer-border);
+  border-radius: 14px; padding: 9px 12px;
   transition: border-color 0.2s;
 }
-.input-wrap:focus-within { border-color: rgba(201,169,110,0.4); }
-
+.drawer-input-wrap:focus-within { border-color: rgba(167,139,250,0.5); }
 textarea {
   flex: 1; background: transparent; border: none; outline: none;
   color: var(--text); font-family: 'Noto Sans TC', sans-serif;
   font-size: 14px; font-weight: 300; resize: none;
-  line-height: 1.6; max-height: 100px; min-height: 22px; padding: 0;
+  line-height: 1.6; max-height: 80px; min-height: 22px; padding: 0;
 }
 textarea::placeholder { color: var(--text-dim); }
-
-.btn-group { display: flex; gap: 6px; align-items: flex-end; }
-
-.mic-btn, .send-btn {
-  width: 36px; height: 36px;
-  border: none; border-radius: 10px;
-  cursor: pointer; display: flex;
-  align-items: center; justify-content: center;
-  flex-shrink: 0; transition: all 0.2s;
-  -webkit-appearance: none;
+.send-btn {
+  width: 34px; height: 34px; background: linear-gradient(135deg, var(--blob1), var(--blob2));
+  border: none; border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: opacity 0.2s; -webkit-appearance: none;
 }
-.mic-btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-}
-.mic-btn:active, .mic-btn:hover { border-color: var(--accent); }
-.mic-btn.recording {
-  background: rgba(220,50,50,0.15);
-  border-color: #dc3232 !important;
-  animation: micPulse 1s ease-in-out infinite;
-}
-@keyframes micPulse {
-  0%,100% { box-shadow: 0 0 0 0 rgba(220,50,50,0.4); }
-  50% { box-shadow: 0 0 0 7px rgba(220,50,50,0); }
-}
-
-.send-btn { background: var(--accent); }
-.send-btn:active, .send-btn:hover { opacity: 0.82; }
+.send-btn:active { opacity: 0.8; }
 .send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+.send-btn svg { width: 14px; height: 14px; fill: #fff; }
 
-.mic-btn svg { width: 16px; height: 16px; color: var(--text-muted); }
-.mic-btn.recording svg { color: #dc3232; }
-.send-btn svg { width: 15px; height: 15px; fill: #0e0e0e; }
+/* ── Voice status label ───────────────────────────────── */
+.voice-label {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%; transform: translateX(-50%);
+  font-size: 12px; color: var(--text-dim);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
 
-.input-footer {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-top: 8px;
-}
-.input-footer-text {
-  font-size: 10px; color: var(--text-dim); letter-spacing: 0.03em;
-}
-.voice-status-text {
-  font-size: 10px; letter-spacing: 0.03em;
-  color: var(--text-dim); transition: color 0.3s;
-}
-.voice-status-text.listening { color: #dc3232; }
-.voice-status-text.processing { color: var(--accent); }
-.voice-status-text.speaking { color: #4caf82; }
-
-/* ── RWD: Tablet (館內平板) ──────────────────────────── */
+/* ── Tablet / Desktop ─────────────────────────────────── */
 @media (min-width: 600px) {
-  :root { --header-h: 64px; }
-
-  .header { padding: 0 28px; }
-  .chat-area { padding: 20px 28px; gap: 20px; }
-  .suggestions { padding: 14px 24px 0; gap: 8px; }
-  .suggestion-btn { font-size: 12px; padding: 7px 14px; }
-  .input-area { padding: 14px 24px 20px; }
-
-  .bubble {
-    max-width: 75%;
-    font-size: 14px;
-  }
-
-  .welcome h2 { font-size: 20px; }
-  .welcome p { font-size: 13px; max-width: 360px; }
-}
-
-/* ── RWD: Desktop ────────────────────────────────────── */
-@media (min-width: 900px) {
-  .app { max-width: 780px; margin: 0 auto; }
-  body { background: #080808; }
+  .greeting h2 { font-size: 26px; }
+  .blob-wrap { width: 240px; height: 240px; }
+  .blob-glow { width: 320px; height: 320px; }
+  .drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); border-radius: 22px 22px 0 0; }
+  .drawer.open { transform: translateX(-50%) translateY(0); }
+  .drawer-overlay { display: none; }
 }
 </style>
 </head>
 <body>
+<div class="bg"></div>
 <div class="app">
 
   <!-- Header -->
   <div class="header">
-    <div class="logo-mark">史</div>
-    <div class="header-text">
-      <h1>臺史博 AI 助理</h1>
-      <p>國立臺灣歷史博物館 · ARTOGO</p>
+    <div class="header-logo">
+      <div class="logo-mark">史</div>
+      <span class="logo-text">臺史博 AI 助理</span>
     </div>
-    <div class="header-right">
-      <div class="status-pill">
-        <div class="status-dot"></div>
-        <span>線上服務中</span>
-      </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span>線上服務中</span>
     </div>
   </div>
 
-  <!-- Suggestions -->
-  <div class="suggestions" id="suggestions">
-    <div class="suggest-label">常見問題</div>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">幾點開館？</button>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">票價多少？</button>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">現在有哪些特展？</button>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">怎麼搭公車來？</button>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">可以帶寵物嗎？</button>
-    <button class="suggestion-btn" onclick="askSuggestion(this)">停車多少錢？</button>
+  <!-- Greeting -->
+  <div class="greeting" id="greeting">
+    <h2 id="greetingText">你好，我是臺史博助理</h2>
+    <p id="greetingSubtext">點我說話，或向上滑動查看對話</p>
   </div>
 
-  <!-- Chat -->
-  <div class="chat-area" id="chatArea">
-    <div class="welcome" id="welcome">
-      <div class="welcome-icon">🏛</div>
-      <div class="welcome-divider"></div>
-      <h2>你好，我是臺史博 AI 助理</h2>
-      <p>有關參觀資訊、展覽內容、交通票價等問題，都可以文字或語音詢問我。</p>
-      <div class="voice-hint">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-        點麥克風說話，AI 會語音回答
+  <!-- Blob stage -->
+  <div class="blob-stage">
+    <div class="blob-glow"></div>
+    <div class="voice-ring" id="voiceRing"></div>
+
+    <div class="blob-wrap idle" id="blobWrap" onclick="toggleRecording()">
+      <svg class="blob-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="blobGrad" cx="40%" cy="35%" r="65%">
+            <stop offset="0%" stop-color="#a78bfa"/>
+            <stop offset="40%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#4f46e5"/>
+          </radialGradient>
+          <radialGradient id="blobShine" cx="30%" cy="25%" r="40%">
+            <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </radialGradient>
+          <filter id="blobBlur">
+            <feGaussianBlur stdDeviation="0.5"/>
+          </filter>
+        </defs>
+        <!-- Main blob shape -->
+        <path class="blob-path" id="blobPath"
+          d="M 100 20
+             C 130 18, 160 35, 172 60
+             C 184 85, 182 115, 168 138
+             C 154 161, 130 178, 100 180
+             C 70 178, 46 161, 32 138
+             C 18 115, 16 85, 28 60
+             C 40 35, 70 22, 100 20 Z"
+          fill="url(#blobGrad)" filter="url(#blobBlur)"/>
+        <!-- Shine overlay -->
+        <path
+          d="M 100 20
+             C 130 18, 160 35, 172 60
+             C 184 85, 182 115, 168 138
+             C 154 161, 130 178, 100 180
+             C 70 178, 46 161, 32 138
+             C 18 115, 16 85, 28 60
+             C 40 35, 70 22, 100 20 Z"
+          fill="url(#blobShine)" opacity="0.7"/>
+      </svg>
+      <!-- Eyes -->
+      <div class="blob-eyes">
+        <div class="eye" id="eyeL"></div>
+        <div class="eye" id="eyeR"></div>
       </div>
+      <!-- Mic hint -->
+      <div class="mic-hint" id="micHint">點我說話</div>
     </div>
+
+    <!-- Voice label -->
+    <div class="voice-label" id="voiceLabel"></div>
   </div>
 
-  <!-- Input -->
-  <div class="input-area">
-    <div class="input-wrap">
-      <textarea id="userInput" placeholder="輸入問題，或點麥克風說話…" rows="1"
-        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <div class="btn-group">
-        <button class="mic-btn" id="micBtn" onclick="toggleRecording()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="2" width="6" height="11" rx="3"/>
-            <path d="M5 10a7 7 0 0 0 14 0"/>
-            <line x1="12" y1="19" x2="12" y2="22"/>
-            <line x1="8" y1="22" x2="16" y2="22"/>
-          </svg>
-        </button>
-        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-        </button>
+  <!-- Bottom bar -->
+  <div class="bottom-bar">
+    <button class="chat-tab-btn" id="chatTabBtn" onclick="openDrawer()">
+      <div class="tab-icon-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
       </div>
-    </div>
-    <div class="input-footer">
-      <span class="input-footer-text">回答以館方正式公告為準 · 06-356-8889</span>
-      <span class="voice-status-text" id="voiceStatusText"></span>
-    </div>
+      <span>對話記錄</span>
+    </button>
   </div>
 
 </div>
+
+<!-- Drawer overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- Drawer -->
+<div class="drawer" id="drawer">
+  <div class="drawer-handle" onclick="closeDrawer()"></div>
+  <div class="drawer-header">
+    <div class="drawer-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      對話記錄
+    </div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Suggestion chips (hidden after first message) -->
+  <div class="suggestion-chips" id="suggestionChips">
+    <button class="chip-btn" onclick="askChip(this)">幾點開館？</button>
+    <button class="chip-btn" onclick="askChip(this)">票價多少？</button>
+    <button class="chip-btn" onclick="askChip(this)">現在有哪些特展？</button>
+    <button class="chip-btn" onclick="askChip(this)">怎麼搭公車來？</button>
+    <button class="chip-btn" onclick="askChip(this)">可以帶寵物嗎？</button>
+    <button class="chip-btn" onclick="askChip(this)">停車多少錢？</button>
+  </div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="chat-empty" id="chatEmpty">
+      <p>點下方麥克風說話<br>或輸入問題開始對話</p>
+    </div>
+  </div>
+
+  <div class="drawer-input-area">
+    <div class="drawer-input-wrap">
+      <textarea id="userInput" placeholder="輸入問題…" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── Worker endpoint ─────────────────────────────────────────────
+// ── Config ─────────────────────────────────────────────────────
 const WORKER = 'https://nmth-api-proxy.ougaga26.workers.dev';
 
 // ── Knowledge Base ──────────────────────────────────────────────
@@ -406,43 +633,33 @@ const KB = [
   { category:"開放時間", q:"2026年特別休館日？", a:"115年度（2026年）特別休館日：2/16、2/17、4/7、5/19、9/29、10/27。8/31–9/7 閉館維修。" },
   { category:"設施", q:"湖畔圖書館幾點開放？", a:"湖畔圖書館開放時間為 09:00–17:00（開館日）。" },
   { category:"設施", q:"臺灣歷史公園幾點開放？", a:"臺灣歷史公園園區每日 05:00–22:00 開放，全年無休。" },
-  { category:"VR", q:"VR再現製造所有哪些節目？場次？", a:"目前有兩部VR：\n1.《hongu' Utax彩虹》2/3–7/5，每週二、四、六，場次09:30、10:15、11:00、14:00、14:45、15:30。\n2.《重返第一法庭．噍吧哖世紀大審判》2/3–7/5，每週三、五、日，同場次。\n片長約17分鐘，座位5席+1席無障礙。" },
-  { category:"票價", q:"門票多少錢？", a:"個人票價：\n・全票 NT$100（一般觀眾）\n・優待票 NT$50（學生、6–12歲兒童、65歲以上長者假日、持敬老卡假日）\n・免票：未滿6歲兒童、65歲以上長者平日、身心障礙人士及必要陪同者1人、持相關證件者。" },
+  { category:"VR", q:"VR再現製造所有哪些節目？場次？", a:"目前有兩部VR：\n1.《hongu' Utax彩虹》2/3–7/5，每週二、四、六放映，場次09:30、10:15、11:00、14:00、14:45、15:30。\n2.《重返第一法庭．噍吧哖世紀大審判》2/3–7/5，每週三、五、日放映，同場次。\n片長約17分鐘，座位5席+1席無障礙。" },
+  { category:"票價", q:"門票多少錢？", a:"個人票價：\n・全票 NT$100（一般觀眾）\n・優待票 NT$50（學生、6–12歲兒童、65歲以上長者假日）\n・免票：未滿6歲兒童、65歲以上長者平日、身心障礙人士及必要陪同者1人。" },
   { category:"票價", q:"小孩要買票嗎？", a:"未滿6歲免費。6歲以上未滿12歲優待票 NT$50。" },
   { category:"票價", q:"65歲以上長者票價？", a:"65歲以上本國籍長者：平日免票，假日優待票 NT$50。持敬老卡者同規定。" },
   { category:"票價", q:"身心障礙者要買票嗎？", a:"身心障礙人士及必要陪同者1人免票，請出示相關證件。" },
   { category:"票價", q:"學生票多少錢？", a:"個人學生優待票 NT$50。學生團體（10人以上）NT$60/人，含語音導覽機。" },
-  { category:"票價優惠", q:"有什麼特殊優惠活動？", a:"2026年特殊優惠：\n・兒童節（4/3–4/6）：12歲以下免票\n・國際博物館日（5/16–5/18）：全館免票\n・原住民族日（8/1–8/2）：原住民族憑證明免票\n・國慶日（10/9–10/11）：全館優待票 NT$50\n・臺灣文化日（10/17）：全館免票" },
-  { category:"退票", q:"票可以退嗎？", a:"未使用票券可於購買當日閉館30分鐘前至售票中心退票，免手續費。一經使用恕不退票。" },
-  { category:"參觀須知", q:"可以帶食物飲料進展場嗎？", a:"禁止攜帶食物、飲料進入展場，不得飲食、嚼食口香糖或吸菸。例外：飲水區可飲白開水，哺乳室可哺乳。" },
-  { category:"參觀須知", q:"可以帶寵物進博物館嗎？", a:"展示教育大樓內禁止攜帶寵物（合格工作犬除外）。戶外園區可帶寵物，但須繫鏈或置於寵物籃，並自行清理排泄物。" },
-  { category:"參觀須知", q:"可以拍照嗎？可以用腳架閃光燈？", a:"一般拍照可以，但禁止自拍棒、腳架、閃光燈、補光燈。標示禁拍區域嚴禁任何拍照或錄影。" },
-  { category:"參觀須知", q:"有寄物服務嗎？", a:"展場設有寄物櫃，寄存物品限當日取回，館方不負保管責任。" },
-  { category:"參觀須知", q:"小孩可以單獨參觀嗎？", a:"6歲以下幼童需成人陪同。6至12歲建議成人陪同。" },
+  { category:"票價優惠", q:"有什麼特殊優惠？", a:"2026年特殊優惠：\n・兒童節（4/3–4/6）：12歲以下免票\n・國際博物館日（5/16–5/18）：全館免票\n・原住民族日（8/1–8/2）：憑證明免票\n・國慶日（10/9–10/11）：優待票 NT$50\n・臺灣文化日（10/17）：全館免票" },
+  { category:"退票", q:"票可以退嗎？", a:"未使用票券可於購買當日閉館30分鐘前退票，免手續費。一經使用恕不退票。" },
+  { category:"參觀須知", q:"可以帶食物飲料嗎？", a:"展場禁止飲食、嚼食口香糖或吸菸。飲水區可飲白開水，哺乳室可哺乳。" },
+  { category:"參觀須知", q:"可以帶寵物嗎？", a:"展示教育大樓內禁止寵物（合格工作犬除外）。戶外園區可帶寵物，須繫鏈並自行清理排泄物。" },
+  { category:"參觀須知", q:"可以拍照嗎？可以用閃光燈嗎？", a:"一般拍照可以，但禁止自拍棒、腳架、閃光燈、補光燈。標示禁拍區嚴禁拍照錄影。" },
+  { category:"參觀須知", q:"有寄物服務嗎？", a:"展場設有寄物櫃，限當日取回，館方不負保管責任。" },
   { category:"交通", q:"博物館地址在哪？", a:"地址：709025 臺南市安南區長和路一段250號。" },
-  { category:"交通", q:"搭高鐵怎麼去？", a:"高鐵台南站後：\n1. 搭計程車直達（約35分）\n2. 轉臺鐵沙崙線→台南站→搭5或18路公車至和順轉運站→步行5分\n3. 轉臺鐵沙崙線→永康站→搭20或905路至和順轉運站→步行5分" },
-  { category:"交通", q:"搭火車怎麼去？", a:"從台南站：搭計程車約25分，或搭5、18路公車至和順轉運站步行5分（約60分）。\n從永康站：搭計程車約15分，或搭20、905路至和順轉運站步行5分（約25分）。" },
-  { category:"交通", q:"有哪些公車可以到？", a:"到「和順轉運站」後步行約5分鐘：\n・5路：台南火車站→和順\n・18路：台南轉運站→和順\n・20路：永康火車站→和順\n・905路：永康轉運站→和順" },
-  { category:"停車", q:"停車費多少？怎麼收費？", a:"小客車 NT$50/次，大客車 NT$150/次，機車免費。電動車慢充每度 NT$8。請離館前至自動繳費機繳費。" },
-  { category:"停車", q:"身心障礙者停車優惠？", a:"駕駛或乘客為身心障礙者，憑手冊及停車位識別證正本至出口收費亭，享半價 NT$25（服務時間 08:30–17:30）。" },
+  { category:"交通", q:"搭高鐵怎麼去？", a:"高鐵台南站後：\n1. 搭計程車直達（約35分）\n2. 轉臺鐵→台南站→搭5或18路至和順轉運站步行5分\n3. 轉臺鐵→永康站→搭20或905路至和順轉運站步行5分" },
+  { category:"交通", q:"搭火車怎麼去？", a:"從台南站：計程車約25分，或搭5、18路至和順步行5分（約60分）。\n從永康站：計程車約15分，或搭20、905路至和順步行5分（約25分）。" },
+  { category:"交通", q:"有哪些公車可以到？", a:"到「和順轉運站」步行約5分鐘：\n・5路：台南火車站→和順\n・18路：台南轉運站→和順\n・20路：永康火車站→和順\n・905路：永康轉運站→和順" },
+  { category:"停車", q:"停車費多少？", a:"小客車 NT$50/次，大客車 NT$150/次，機車免費。離館前至自動繳費機繳費。" },
+  { category:"停車", q:"身心障礙者停車優惠？", a:"持身心障礙手冊及停車位識別證，至出口收費亭享半價 NT$25（服務時間 08:30–17:30）。" },
   { category:"特展", q:"現在有哪些特展？", a:"目前三檔特展：\n1.《地方記憶・遊牧》2026/2/10–5/31，1樓大廳\n2.《轉機：臺灣女子移動紀事》2025/12/23–2026/8/30，4樓第1特展室\n3.《開箱吧！臺史博館藏桌遊》2025/6/3–2026/4/26，4樓第3特展室" },
-  { category:"常設展", q:"常設展叫什麼名字？有哪些單元？", a:"常設展《斯土斯民：臺灣的故事》，共7大單元：\n1. 臺灣，交會之島\n2. 最初的抵岸\n3. 倚海而生的島與人\n4. 山海之間的共存與競逐\n5. 新秩序下的苦悶與夢想\n6. 走向民主這條路\n7. 大家的博物館" },
-  { category:"聯絡", q:"博物館電話是？", a:"電話：06-356-8889\n傳真：06-356-4981\n無障礙服務專線：06-356-8889 分機 8103" }
+  { category:"常設展", q:"常設展叫什麼？有哪些單元？", a:"常設展《斯土斯民：臺灣的故事》共7大單元：臺灣交會之島、最初的抵岸、倚海而生的島與人、山海之間的共存與競逐、新秩序下的苦悶與夢想、走向民主這條路、大家的博物館。" },
+  { category:"聯絡", q:"博物館電話是？", a:"電話：06-356-8889\n無障礙服務專線：06-356-8889 分機 8103" }
 ];
 
 const KB_TEXT = KB.map(e => `【${e.category}】${e.q}\n${e.a}`).join('\n\n');
-
 const SYSTEM_PROMPT = `你是國立臺灣歷史博物館（臺史博）的 AI 問答助理。
-
-【重要規則】
-1. 只能根據以下知識庫內容回答，不可自行推測或添加知識庫以外的資訊
-2. 若問題在知識庫中找不到答案，請說「我目前的資料沒有這個資訊，建議您聯繫館方：06-356-8889」
-3. 若訪客問題太簡略或模糊，請主動反問釐清
-4. 你有完整的對話記憶，請根據上下文理解使用者的真實意圖
-5. 語氣親切、簡潔，使用繁體中文
-
-【知識庫】
-${KB_TEXT}`;
+【規則】只能根據以下知識庫回答。找不到答案請說「我目前的資料沒有這個資訊，建議聯繫館方：06-356-8889」。問題模糊請主動反問。有對話記憶，請根據上下文理解真實意圖。語氣親切簡潔，使用繁體中文。回答請盡量簡短，2-4句為佳。
+【知識庫】\n${KB_TEXT}`;
 
 // ── State ──────────────────────────────────────────────────────
 let conversationHistory = [];
@@ -450,26 +667,62 @@ let isLoading = false;
 let isRecording = false;
 let mediaRecorder = null;
 let currentAudio = null;
+let hasMessages = false;
 
+// ── DOM refs ───────────────────────────────────────────────────
+const blob = document.getElementById('blobWrap');
+const voiceRing = document.getElementById('voiceRing');
+const voiceLabel = document.getElementById('voiceLabel');
+const micHint = document.getElementById('micHint');
+const greetingText = document.getElementById('greetingText');
+const greetingSubtext = document.getElementById('greetingSubtext');
 const chatArea = document.getElementById('chatArea');
-const userInput = document.getElementById('userInput');
+const chatEmpty = document.getElementById('chatEmpty');
 const sendBtn = document.getElementById('sendBtn');
-const micBtn = document.getElementById('micBtn');
-const voiceStatusText = document.getElementById('voiceStatusText');
+const userInput = document.getElementById('userInput');
+const chatTabBtn = document.getElementById('chatTabBtn');
+const suggestionChips = document.getElementById('suggestionChips');
 
-// ── UI helpers ─────────────────────────────────────────────────
-function setVoiceStatus(msg, cls = '') {
-  voiceStatusText.textContent = msg;
-  voiceStatusText.className = 'voice-status-text' + (cls ? ' ' + cls : '');
+// ── Blob state ─────────────────────────────────────────────────
+function setBlobState(state) {
+  blob.className = 'blob-wrap ' + state;
+  voiceRing.className = 'voice-ring' + (state !== 'idle' ? ' active' : '');
 }
 
-function removeWelcome() {
-  const w = document.getElementById('welcome');
-  if (w) w.remove();
-  document.getElementById('suggestions').style.display = 'none';
+function setVoiceLabel(text) {
+  voiceLabel.textContent = text;
+  voiceLabel.style.opacity = text ? '1' : '0';
 }
 
+// ── Drawer ─────────────────────────────────────────────────────
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  setTimeout(() => chatArea.scrollTop = chatArea.scrollHeight, 100);
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
+
+// Swipe to close drawer
+let touchStartY = 0;
+document.getElementById('drawer').addEventListener('touchstart', e => {
+  touchStartY = e.touches[0].clientY;
+}, { passive: true });
+document.getElementById('drawer').addEventListener('touchend', e => {
+  const dy = e.changedTouches[0].clientY - touchStartY;
+  if (dy > 60) closeDrawer();
+}, { passive: true });
+
+// ── Chat helpers ───────────────────────────────────────────────
 function appendMsg(text, role, isError = false) {
+  if (chatEmpty) chatEmpty.remove();
+  if (!hasMessages && role === 'user') {
+    hasMessages = true;
+    chatTabBtn.classList.add('has-messages');
+    suggestionChips.style.display = 'none';
+  }
   const div = document.createElement('div');
   div.className = `msg ${role}`;
   const av = document.createElement('div');
@@ -479,15 +732,7 @@ function appendMsg(text, role, isError = false) {
   bubble.className = `bubble ${role}${isError ? ' error' : ''}`;
   bubble.style.whiteSpace = 'pre-line';
   bubble.textContent = text;
-  if (role === 'bot' && !isError) {
-    const tag = document.createElement('div');
-    tag.className = 'source-tag';
-    tag.textContent = '✓ 臺史博官方資料庫';
-    bubble.appendChild(document.createElement('br'));
-    bubble.appendChild(tag);
-  }
-  div.appendChild(av);
-  div.appendChild(bubble);
+  div.appendChild(av); div.appendChild(bubble);
   chatArea.appendChild(div);
   chatArea.scrollTop = chatArea.scrollHeight;
 }
@@ -504,12 +749,9 @@ function showTyping() {
   chatArea.appendChild(div);
   chatArea.scrollTop = chatArea.scrollHeight;
 }
-function hideTyping() {
-  const t = document.getElementById('typingIndicator');
-  if (t) t.remove();
-}
+function hideTyping() { document.getElementById('typingIndicator')?.remove(); }
 
-// ── Gemini via Worker ──────────────────────────────────────────
+// ── Gemini ─────────────────────────────────────────────────────
 async function callGemini(userMessage) {
   conversationHistory.push({ role: 'user', parts: [{ text: userMessage }] });
   const res = await fetch(`${WORKER}/gemini`, {
@@ -518,53 +760,51 @@ async function callGemini(userMessage) {
     body: JSON.stringify({
       system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
       contents: conversationHistory,
-      generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
+      generationConfig: { maxOutputTokens: 600, temperature: 0.3 }
     })
   });
-  if (!res.ok) throw new Error(`Gemini 錯誤 ${res.status}`);
+  if (!res.ok) throw new Error(`${res.status}`);
   const data = await res.json();
   const reply = data.candidates[0].content.parts[0].text;
   conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
   return reply;
 }
 
-// ── TTS via Worker ─────────────────────────────────────────────
+// ── TTS ────────────────────────────────────────────────────────
 async function speakText(text) {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  setBlobState('speaking');
+  setVoiceLabel('說話中…');
   try {
-    setVoiceStatus('語音播放中…', 'speaking');
     const res = await fetch(`${WORKER}/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text })
     });
-    if (!res.ok) throw new Error('TTS 失敗');
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    if (!res.ok) throw new Error('TTS failed');
+    const blob_ = await res.blob();
+    const url = URL.createObjectURL(blob_);
     currentAudio = new Audio(url);
-    currentAudio.onended = () => setVoiceStatus('');
-    currentAudio.play();
+    currentAudio.onended = () => { setBlobState('idle'); setVoiceLabel(''); };
+    currentAudio.onerror = () => { setBlobState('idle'); setVoiceLabel(''); };
+    await currentAudio.play();
   } catch (e) {
-    setVoiceStatus('');
-    console.error('TTS error:', e);
+    setBlobState('idle'); setVoiceLabel('');
   }
 }
 
-// ── STT via Worker ─────────────────────────────────────────────
+// ── STT ────────────────────────────────────────────────────────
 async function toggleRecording() {
   if (isLoading) return;
-
   if (isRecording) {
-    // Stop recording
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-    }
+    mediaRecorder?.state === 'recording' && mediaRecorder.stop();
     return;
   }
-
   isRecording = true;
-  micBtn.classList.add('recording');
-  setVoiceStatus('聆聽中… 再按一次停止', 'listening');
+  setBlobState('listening');
+  setVoiceLabel('聆聽中… 再點停止');
+  micHint.style.display = 'none';
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -574,12 +814,11 @@ async function toggleRecording() {
     mediaRecorder.onstop = async () => {
       stream.getTracks().forEach(t => t.stop());
       isRecording = false;
-      micBtn.classList.remove('recording');
-      setVoiceStatus('辨識中…', 'processing');
-
+      setBlobState('idle');
+      setVoiceLabel('辨識中…');
       try {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const wavBlob = await convertToWav(blob);
+        const webmBlob = new Blob(chunks, { type: 'audio/webm' });
+        const wavBlob = await convertToWav(webmBlob);
         const res = await fetch(`${WORKER}/stt`, {
           method: 'POST',
           headers: { 'Content-Type': 'audio/wav' },
@@ -587,94 +826,86 @@ async function toggleRecording() {
         });
         const data = await res.json();
         const text = data.DisplayText || '';
+        setVoiceLabel('');
         if (text) {
-          userInput.value = text;
-          setVoiceStatus('');
-          sendMessage();
+          openDrawer();
+          await new Promise(r => setTimeout(r, 200));
+          sendMessage(text);
         } else {
-          setVoiceStatus('未偵測到語音，請再試');
-          setTimeout(() => setVoiceStatus(''), 2500);
+          setVoiceLabel('未偵測到語音');
+          setTimeout(() => setVoiceLabel(''), 2000);
         }
-      } catch (e) {
-        setVoiceStatus('語音辨識失敗');
-        setTimeout(() => setVoiceStatus(''), 2500);
+      } catch {
+        setVoiceLabel('辨識失敗，請再試');
+        setTimeout(() => setVoiceLabel(''), 2500);
       }
     };
-
     mediaRecorder.start();
-    // Auto-stop after 10s
-    setTimeout(() => {
-      if (mediaRecorder && mediaRecorder.state === 'recording') mediaRecorder.stop();
-    }, 10000);
-
-  } catch (e) {
+    setTimeout(() => mediaRecorder?.state === 'recording' && mediaRecorder.stop(), 10000);
+  } catch {
     isRecording = false;
-    micBtn.classList.remove('recording');
-    setVoiceStatus('無法存取麥克風');
-    setTimeout(() => setVoiceStatus(''), 2500);
+    setBlobState('idle');
+    setVoiceLabel('無法存取麥克風');
+    setTimeout(() => setVoiceLabel(''), 2500);
+    micHint.style.display = '';
   }
 }
 
-// ── WAV conversion ─────────────────────────────────────────────
-async function convertToWav(webmBlob) {
-  const audioCtx = new AudioContext({ sampleRate: 16000 });
-  const arrayBuffer = await webmBlob.arrayBuffer();
-  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
-  const pcm = audioBuffer.getChannelData(0);
+// ── WAV ────────────────────────────────────────────────────────
+async function convertToWav(blob_) {
+  const ctx = new AudioContext({ sampleRate: 16000 });
+  const buf = await blob_.arrayBuffer();
+  const audio = await ctx.decodeAudioData(buf);
+  const pcm = audio.getChannelData(0);
   return new Blob([pcmToWav(pcm, 16000)], { type: 'audio/wav' });
 }
-
-function pcmToWav(pcmData, sampleRate) {
-  const buf = new ArrayBuffer(44 + pcmData.length * 2);
-  const view = new DataView(buf);
-  const ws = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
-  ws(0,'RIFF'); view.setUint32(4, 36 + pcmData.length * 2, true);
-  ws(8,'WAVE'); ws(12,'fmt '); view.setUint32(16,16,true);
-  view.setUint16(20,1,true); view.setUint16(22,1,true);
-  view.setUint32(24,sampleRate,true); view.setUint32(28,sampleRate*2,true);
-  view.setUint16(32,2,true); view.setUint16(34,16,true);
-  ws(36,'data'); view.setUint32(40, pcmData.length * 2, true);
-  for (let i = 0; i < pcmData.length; i++) {
-    view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcmData[i])) * 0x7FFF, true);
-  }
+function pcmToWav(pcm, sr) {
+  const buf = new ArrayBuffer(44 + pcm.length * 2);
+  const v = new DataView(buf);
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0,'RIFF'); v.setUint32(4, 36 + pcm.length * 2, true);
+  ws(8,'WAVE'); ws(12,'fmt '); v.setUint32(16,16,true);
+  v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,sr,true); v.setUint32(28,sr*2,true);
+  v.setUint16(32,2,true); v.setUint16(34,16,true);
+  ws(36,'data'); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++)
+    v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7FFF, true);
   return buf;
 }
 
-// ── Send message ───────────────────────────────────────────────
+// ── Send ───────────────────────────────────────────────────────
 async function sendMessage(text) {
-  const question = text || userInput.value.trim();
-  if (!question || isLoading) return;
-  removeWelcome();
-  appendMsg(question, 'user');
-  userInput.value = '';
-  autoResize(userInput);
-  isLoading = true;
-  sendBtn.disabled = true;
+  const q = text || userInput.value.trim();
+  if (!q || isLoading) return;
+  appendMsg(q, 'user');
+  userInput.value = ''; autoResize(userInput);
+  isLoading = true; sendBtn.disabled = true;
   showTyping();
+  greetingText.textContent = '思考中…';
+  greetingSubtext.textContent = '';
 
   try {
-    const reply = await callGemini(question);
+    const reply = await callGemini(q);
     hideTyping();
     appendMsg(reply, 'bot');
+    greetingText.textContent = '回答完成';
+    greetingSubtext.textContent = '點我繼續說話';
     speakText(reply);
   } catch (err) {
     hideTyping();
-    appendMsg(`連線失敗，請稍後再試。\n如有緊急需求請洽服務台或撥 06-356-8889。`, 'bot', true);
+    appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。', 'bot', true);
     conversationHistory.pop();
+    greetingText.textContent = '你好，我是臺史博助理';
+    greetingSubtext.textContent = '點我說話，或向上滑動查看對話';
+    setBlobState('idle');
   }
-
-  isLoading = false;
-  sendBtn.disabled = false;
+  isLoading = false; sendBtn.disabled = false;
 }
 
-function askSuggestion(btn) { sendMessage(btn.textContent); }
-function handleKey(e) {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
-}
-function autoResize(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
-}
+function askChip(btn) { openDrawer(); setTimeout(() => sendMessage(btn.textContent), 150); }
+function handleKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 80) + 'px'; }
 </script>
 </body>
 </html>
