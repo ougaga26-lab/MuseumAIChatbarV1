@@ -113,42 +113,27 @@ html, body {
 
 /* ── Voice label ─────────────────────────────────── */
 .voice-label {
-  /* 改為相對位置，它會出現在文字下方、球體上方 */
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center;
-  gap: 8px;
-  
-  /* 間距控制：讓它與上方文字保持一點距離 */
-  margin-top: 20px; 
-  
-  background: rgba(255, 255, 255, 0.1); 
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 6px 18px;
-  
-  font-size: 11px;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -220px);
+  z-index: 4;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.82);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 10px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.08em;
   color: #fff;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  white-space: nowrap;
-  
-  /* 確保它不會被球遮住 */
-  position: relative;
-  z-index: 5;
-  
-  /* 讓文字切換時平滑一點 */
-  transition: all 0.3s ease;
-}
-
-/* 調整原本的 greeting 區塊，確保它垂直排列 */
-.greeting {
-  margin-top: 52px;
+  min-width: 140px;
+  justify-content: center;
   text-align: center;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
 }
 .voice-label.state-idle    { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
 .voice-label.state-listen  { color: #ff4444; border-color: rgba(255,68,68,0.4); }
@@ -613,13 +598,15 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
     </div>
   </div>
 
-<div class="greeting">
-  <h2 id="greetingText">Gotour AI 智慧小助手</h2>
-  <div class="voice-label state-idle" id="voiceLabel">
-    <span class="status-dot-sm"></span>
-    <span id="voiceLabelText">點擊球球詢問問題</span>
+  <div class="greeting">
+    <h2 id="greetingText">Gotour AI 智慧小助手</h2>
+    
   </div>
-</div>
+
+  <div class="voice-label state-idle" id="voiceLabel"><span class="status-dot-sm"></span><span id="voiceLabelText">點擊球球詢問問題</span></div>
+
+  <div class="orb-spacer"></div>
+
 
   <div class="bottom-bar">
     <div class="tab-bar">
