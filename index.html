@@ -1245,7 +1245,7 @@ async function toggleRecording() {
   isRecording = true;
   setOrbState('listening');
   setVoiceLabel('聆聽中… 再點停止');
-  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+  if (currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio:true});
