@@ -113,22 +113,26 @@ html, body {
 
 /* ── Voice label ─────────────────────────────────── */
 .voice-label {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(0,0,0,0.75);
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(20dvh + 80px);
+  z-index: 4;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.82);
   border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  padding: 7px 16px;
-  font-size: 16px;
+  border-radius: 6px;
+  padding: 5px 14px;
+  font-size: 10px;
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 300;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   color: #fff;
-  min-height: 38px;
-  min-width: 180px;
+  min-width: 140px;
   justify-content: center;
-  transition: all 0.25s ease;
+  text-align: center;
   pointer-events: none;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
   white-space: nowrap;
 }
 .voice-label.state-idle    { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
@@ -1184,21 +1188,35 @@ const userInput = document.getElementById('userInput');
 const chatTabBtn = document.getElementById('chatTabBtn');
 const chipRow = document.getElementById('chipRow');
 
+let _twTimer = null;
+function typewrite(el, text, speed) {
+  if (_twTimer) { clearInterval(_twTimer); _twTimer = null; }
+  el.textContent = '';
+  let i = 0;
+  _twTimer = setInterval(() => {
+    if (i < text.length) {
+      el.textContent += text[i++];
+    } else {
+      clearInterval(_twTimer);
+      _twTimer = null;
+    }
+  }, speed || 40);
+}
+
 function setVoiceLabel(t, state) {
   const el = document.getElementById('voiceLabel');
   const txt = document.getElementById('voiceLabelText');
   const dot = el.querySelector('.status-dot-sm');
-  // Remove all state classes
   el.classList.remove('state-idle','state-listen','state-stt','state-ai','state-speak');
+  const label = t || '點擊球球詢問問題';
   if (!state || state === 'idle') {
     el.classList.add('state-idle');
     dot.style.display = 'none';
-    txt.textContent = t || '點擊球球詢問問題';
   } else {
     el.classList.add('state-' + state);
     dot.style.display = 'block';
-    txt.textContent = t;
   }
+  typewrite(txt, label, 35);
 }
 
 function openDrawer() {
