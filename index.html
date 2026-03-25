@@ -508,6 +508,31 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
   .map-overlay, .exhibit-overlay { display: none; }
 }
 
+
+/* ── iOS silent mode warning ─────────────────────── */
+.ios-mute-hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  background: rgba(2,5,16,0.92);
+  border: 1px solid rgba(0,255,200,0.3);
+  border-radius: 16px;
+  padding: 18px 24px;
+  text-align: center;
+  color: rgba(200,240,255,0.9);
+  font-size: 13px;
+  line-height: 1.8;
+  max-width: 260px;
+  backdrop-filter: blur(20px);
+  animation: hintFadeIn 0.3s ease;
+  pointer-events: none;
+}
+.ios-mute-hint .hint-icon { font-size: 28px; display: block; margin-bottom: 8px; }
+.ios-mute-hint .hint-sub { font-size: 11px; color: rgba(200,240,255,0.5); margin-top: 6px; }
+@keyframes hintFadeIn { from { opacity:0; transform: translate(-50%,-50%) scale(0.92); } to { opacity:1; transform: translate(-50%,-50%) scale(1); } }
+
 </style>
 </head>
 <body>
@@ -1270,6 +1295,8 @@ async function toggleRecording() {
       isRecording = false;
       setOrbState('thinking');
       setVoiceLabel('辨識中…');
+      // Re-unlock audio: mic release may reset iOS audio session
+      await forceUnlockAudio().catch(()=>{});
       try {
         const wavBlob = await convertToWav(new Blob(chunks,{type:'audio/webm'}));
         const res = await fetch(`${WORKER}/stt`, {
@@ -1457,6 +1484,40 @@ function detectAndOpenDrawer(reply) {
   }
 }
 
+// ── iOS Silent Mode Warning ─────────────────────────
+function showIOSSilentWarning() {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  if (!isIOS) return;
+  if (localStorage.getItem('ios_mute_warned')) return;
+
+  const div = document.createElement('div');
+  div.className = 'ios-mute-hint';
+  div.innerHTML = `
+    <span class="hint-icon">🔔</span>
+    請確認手機已<strong>關閉靜音模式</strong><br>
+    （側邊靜音撥桿朝上）
+    <div class="hint-sub">點任意處關閉此提示</div>
+  `;
+  document.body.appendChild(div);
+
+  // Dismiss on any tap
+  const dismiss = () => {
+    div.style.opacity = '0';
+    div.style.transition = 'opacity 0.3s';
+    setTimeout(() => div.remove(), 300);
+    localStorage.setItem('ios_mute_warned', '1');
+    document.removeEventListener('touchstart', dismiss);
+    document.removeEventListener('click', dismiss);
+  };
+  setTimeout(() => {
+    document.addEventListener('touchstart', dismiss, {once:true, passive:true});
+    document.addEventListener('click', dismiss, {once:true});
+  }, 500);
+
+  // Auto-dismiss after 5s
+  setTimeout(dismiss, 5000);
+}
+
 // ── Map ────────────────────────────────────────────
 function openMapDrawer(){document.getElementById('mapDrawer').classList.add('open');document.getElementById('mapOverlay').classList.add('open');}
 function closeMapDrawer(){document.getElementById('mapDrawer').classList.remove('open');document.getElementById('mapOverlay').classList.remove('open');}
@@ -1548,6 +1609,7 @@ function showComingSoon(name){const l=document.getElementById('voiceLabel');l.te
 // Init
 window.addEventListener('DOMContentLoaded', function(){
   initOrb();
+  showIOSSilentWarning();
 
   // ── Proper audio unlock on all user gesture entry points ──
   // Send button
