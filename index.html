@@ -8,24 +8,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400&display=swap');
 
 :root {
-  --bg: #0d0d1a;
-  --surface: rgba(255,255,255,0.05);
-  --surface2: rgba(255,255,255,0.08);
-  --border: rgba(139,92,246,0.2);
-  --accent: #a78bfa;
-  --text: #f0eeff;
-  --text-dim: rgba(240,238,255,0.45);
-  --text-dimmer: rgba(240,238,255,0.25);
-  --user-bubble: rgba(99,102,241,0.2);
-  --user-border: rgba(99,102,241,0.35);
-  --drawer-bg: rgba(8,8,20,0.93);
+  --primary: #90E0EF;
+  --secondary: #FFCCBC;
+  --tertiary: #F48FB1;
+  --neutral: #F0F4F8;
+  --surface: rgba(255,255,255,0.18);
+  --surface2: rgba(255,255,255,0.28);
+  --border: rgba(255,255,255,0.38);
+  --accent: #F48FB1;
+  --text: #f0f8ff;
+  --text-dim: rgba(200,240,255,0.6);
+  --text-dimmer: rgba(200,240,255,0.35);
+  --user-bubble: rgba(244,143,177,0.18);
+  --user-border: rgba(244,143,177,0.32);
+  --drawer-bg: rgba(240,244,248,0.78);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
 html, body {
   height: 100%; height: 100dvh;
-  background: var(--bg);
+  background: #020510;
   color: var(--text);
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 300;
@@ -39,13 +42,15 @@ html, body {
   inset: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: 2;
   cursor: pointer;
+  pointer-events: all;
+  background: transparent;
 }
 
 /* ── App overlay ─────────────────────────────────── */
 .app {
-  position: relative; z-index: 1;
+  position: relative; z-index: 3;
   height: 100%; height: 100dvh;
   display: flex; flex-direction: column;
   align-items: center;
@@ -55,47 +60,52 @@ html, body {
 
 /* ── Header ──────────────────────────────────────── */
 .header {
-  width: 100%; padding: 20px 24px 0;
-  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; padding: 18px 24px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
-.header-logo { display: flex; align-items: center; gap: 9px; }
+.header-logo { display: flex; align-items: center; justify-content: center; width: 100%; }
 .logo-mark {
   width: 30px; height: 30px; border-radius: 8px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
   display: flex; align-items: center; justify-content: center;
   font-family: 'Noto Serif TC', serif;
   font-size: 13px; color: #fff; font-weight: 600;
 }
-.logo-text { font-size: 13px; color: var(--text-dim); letter-spacing: 0.06em; }
+.logo-text { font-size: 13px; color: rgba(42,58,74,0.6); letter-spacing: 0.06em; }
 .status-pill {
   display: flex; align-items: center; gap: 5px;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 20px; padding: 5px 10px;
-  font-size: 10px; color: var(--text-dim);
-  backdrop-filter: blur(10px);
+  background: rgba(0,255,200,0.08);
+  border: 1px solid rgba(0,255,200,0.2);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 10px; color: rgba(0,255,200,0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 .status-dot {
   width: 5px; height: 5px; border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 6px rgba(74,222,128,0.8);
+  background: #00ffcc;
+  box-shadow: 0 0 8px rgba(0,255,200,0.9);
   animation: sPulse 2.5s ease-in-out infinite;
 }
 @keyframes sPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* ── Greeting ────────────────────────────────────── */
 .greeting {
-  margin-top: 28px;
+  margin-top: 52px;
   text-align: center;
   pointer-events: none;
 }
 .greeting h2 {
   font-family: 'Noto Serif TC', serif;
-  font-size: 20px; font-weight: 600;
+  font-size: 26px; font-weight: 600;
   letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 0 30px rgba(0,255,200,0.4);
 }
 .greeting p {
-  font-size: 11px; color: var(--text-dim);
-  margin-top: 5px; letter-spacing: 0.05em;
+  font-size: 11px; color: rgba(200,240,255,0.6);
+  margin-top: 10px; letter-spacing: 0.05em;
+  text-shadow: 0 0 15px rgba(0,255,200,0.2);
 }
 
 /* ── Center spacer (canvas takes up most of screen) ── */
@@ -123,15 +133,19 @@ html, body {
 
 .chat-tab-btn {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: none; border: none; cursor: pointer;
-  padding: 8px 14px; border-radius: 14px;
-  color: var(--text-dim);
-  transition: background 0.2s;
+  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
+  cursor: pointer;
+  padding: 8px 20px; border-radius: 20px;
+  color: rgba(80,40,90,0.75);
+  transition: all 0.2s;
   position: relative;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(200,140,200,0.2);
 }
-.chat-tab-btn:active { background: var(--surface); }
+.chat-tab-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.97); }
 .chat-tab-btn svg { width: 22px; height: 22px; }
-.chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; }
+.chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; color: rgba(200,240,255,0.6); }
 .chat-tab-btn.has-messages .notif-dot {
   display: block;
 }
@@ -139,13 +153,13 @@ html, body {
   display: none;
   position: absolute; top: 6px; right: 12px;
   width: 7px; height: 7px;
-  background: var(--accent); border-radius: 50%;
-  box-shadow: 0 0 6px rgba(167,139,250,0.6);
+  background: #F48FB1; border-radius: 50%;
+  box-shadow: 0 0 6px rgba(244,143,177,0.7);
 }
 
 /* ── Drawer ──────────────────────────────────────── */
 .drawer-overlay {
-  position: fixed; inset: 0; z-index: 8;
+  position: fixed; inset: 0; z-index: 9;
   background: rgba(0,0,0,0.35);
   opacity: 0; pointer-events: none;
   transition: opacity 0.3s;
@@ -154,13 +168,14 @@ html, body {
 .drawer-overlay.open { opacity: 1; pointer-events: all; }
 
 .drawer {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 9;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
   height: 64%;
-  background: var(--drawer-bg);
-  border-top: 1px solid var(--border);
+  background: rgba(2,5,16,0.85);
+  border-top: 1px solid rgba(0,255,200,0.15);
   border-radius: 22px 22px 0 0;
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 -8px 48px rgba(0,255,200,0.1);
   display: flex; flex-direction: column;
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
@@ -169,7 +184,7 @@ html, body {
 
 .drawer-handle {
   width: 36px; height: 4px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(0,255,200,0.2);
   border-radius: 2px;
   margin: 12px auto 0;
   cursor: pointer; flex-shrink: 0;
@@ -179,16 +194,16 @@ html, body {
   padding: 10px 20px 6px; flex-shrink: 0;
 }
 .drawer-title {
-  font-size: 12px; color: var(--text-dim);
+  font-size: 12px; color: rgba(0,255,200,0.6);
   letter-spacing: 0.06em;
   display: flex; align-items: center; gap: 6px;
 }
 .drawer-title svg { width: 12px; height: 12px; opacity: 0.5; }
 .drawer-close-btn {
-  background: var(--surface); border: none; cursor: pointer;
+  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); cursor: pointer;
   width: 26px; height: 26px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  color: var(--text-dim);
+  color: rgba(0,255,200,0.6);
 }
 .drawer-close-btn svg { width: 13px; height: 13px; }
 
@@ -197,13 +212,14 @@ html, body {
   padding: 0 16px 8px; flex-shrink: 0;
 }
 .chip-btn {
-  background: var(--surface); border: 1px solid var(--border);
-  color: var(--text-dim); font-family: 'Noto Sans TC', sans-serif;
+  background: rgba(0,255,200,0.07); border: 1px solid rgba(0,255,200,0.18);
+  color: rgba(200,240,255,0.65); font-family: 'Noto Sans TC', sans-serif;
   font-size: 11px; padding: 5px 11px; border-radius: 20px;
   cursor: pointer; white-space: nowrap; -webkit-appearance: none;
-  transition: all 0.15s;
+  transition: all 0.15s; backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(200,140,200,0.1);
 }
-.chip-btn:active { border-color: var(--accent); color: var(--accent); }
+.chip-btn:active { border-color: rgba(144,224,239,0.5); background: rgba(255,255,255,0.55); }
 
 .chat-area {
   flex: 1; overflow-y: auto; padding: 6px 16px 10px;
@@ -227,7 +243,7 @@ html, body {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 500; margin-top: 2px;
 }
-.avatar.bot { background: linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-family:'Noto Serif TC',serif; }
+.avatar.bot { background: linear-gradient(135deg, #00ffcc, #00aaff); color:#fff; font-family:'Noto Serif TC',serif; }
 .avatar.user { background: var(--surface2); color: var(--text-dim); }
 
 .bubble {
@@ -235,8 +251,8 @@ html, body {
   padding: 9px 12px; font-size: 13px; line-height: 1.8;
   border-radius: 14px; word-break: break-word;
 }
-.bubble.bot { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-top-left-radius: 3px; }
-.bubble.user { background: var(--user-bubble); border: 1px solid var(--user-border); color: var(--text); border-top-right-radius: 3px; }
+.bubble.bot { background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); color: #f0f8ff; border-top-left-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.bubble.user { background: rgba(170,68,255,0.15); border: 1px solid rgba(170,68,255,0.3); color: #f0f8ff; border-top-right-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
 .bubble.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
 
 .typing { display: flex; gap: 8px; align-items: flex-end; }
@@ -261,20 +277,22 @@ html, body {
 }
 .drawer-input-wrap {
   display: flex; gap: 7px; align-items: flex-end;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: 14px; padding: 8px 11px; transition: border-color 0.2s;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(0,255,200,0.2);
+  border-radius: 14px; padding: 8px 11px; transition: all 0.2s;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 12px rgba(200,140,200,0.1);
 }
-.drawer-input-wrap:focus-within { border-color: rgba(167,139,250,0.5); }
+.drawer-input-wrap:focus-within { border-color: rgba(0,255,200,0.4); box-shadow: 0 2px 20px rgba(0,255,200,0.15); }
 textarea {
   flex: 1; background: transparent; border: none; outline: none;
   color: var(--text); font-family: 'Noto Sans TC', sans-serif;
   font-size: 14px; font-weight: 300; resize: none;
   line-height: 1.6; max-height: 80px; min-height: 22px; padding: 0;
 }
-textarea::placeholder { color: var(--text-dimmer); }
+textarea::placeholder { color: rgba(0,255,200,0.3); }
 .send-btn {
   width: 32px; height: 32px;
-  background: linear-gradient(135deg,#6366f1,#8b5cf6);
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
   border: none; border-radius: 9px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; -webkit-appearance: none; transition: opacity 0.2s;
@@ -290,9 +308,98 @@ textarea::placeholder { color: var(--text-dimmer); }
   .drawer.open { transform: translateX(-50%) translateY(0); }
   .drawer-overlay { display: none; }
 }
+
+
+/* ── Aurora background ───────────────────────────── */
+@property --a1{syntax:'<angle>';initial-value:0deg;inherits:false}
+@property --a2{syntax:'<angle>';initial-value:60deg;inherits:false}
+@property --a3{syntax:'<angle>';initial-value:120deg;inherits:false}
+
+.aurora-bg {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden;
+  background: #020510;
+}
+
+.aurora-layer {
+  position: absolute; inset: 0;
+  filter: blur(55px);
+  opacity: 0.82;
+  animation: auroraPulse 14s ease-in-out infinite alternate;
+}
+@keyframes auroraPulse {
+  0%   { opacity: 0.7;  filter: blur(55px); }
+  50%  { opacity: 0.92; filter: blur(45px); }
+  100% { opacity: 0.72; filter: blur(65px); }
+}
+
+.aurora-band {
+  position: absolute;
+  width: 200%; left: -50%;
+  border-radius: 50%;
+  transform-origin: center center;
+}
+
+.ab1 {
+  height: 80vh; top: -20vh;
+  background: conic-gradient(from var(--a1) at 40% 60%,
+    transparent 0%,
+    rgba(0,255,200,0.5)  12%,
+    rgba(0,170,255,0.4)  28%,
+    transparent 42%,
+    rgba(170,68,255,0.3) 58%,
+    transparent 72%
+  );
+  animation: ab1spin 20s linear infinite;
+}
+@keyframes ab1spin { to { --a1: 360deg } }
+
+.ab2 {
+  height: 85vh; top: 0vh;
+  background: conic-gradient(from var(--a2) at 62% 38%,
+    transparent 0%,
+    rgba(255,102,170,0.4) 10%,
+    rgba(0,255,200,0.3)   26%,
+    transparent 40%,
+    rgba(0,170,255,0.5)   54%,
+    transparent 68%
+  );
+  animation: ab2spin 28s linear infinite reverse;
+}
+@keyframes ab2spin { to { --a2: 420deg } }
+
+.ab3 {
+  height: 70vh; top: -5vh;
+  background: conic-gradient(from var(--a3) at 28% 72%,
+    transparent 0%,
+    rgba(68,255,170,0.4)  18%,
+    transparent 32%,
+    rgba(255,102,170,0.3) 48%,
+    rgba(170,68,255,0.4)  62%,
+    transparent 78%
+  );
+  animation: ab3spin 22s linear infinite;
+}
+@keyframes ab3spin { to { --a3: 480deg } }
+
 </style>
 </head>
 <body>
+
+<!-- Aurora background -->
+<div class="aurora-bg">
+  <div class="aurora-layer">
+    <div class="aurora-band ab1"></div>
+    <div class="aurora-band ab2"></div>
+    <div class="aurora-band ab3"></div>
+  </div>
+</div>
+
+<!-- Orb glow ring -->
+<div class="orb-glow-ring" id="orbGlowRing"></div>
+
+<!-- Dot grid -->
+<canvas id="dotCanvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
 
 <!-- Three.js canvas -->
 <canvas id="threeCanvas"></canvas>
@@ -300,8 +407,7 @@ textarea::placeholder { color: var(--text-dimmer); }
 <div class="app">
   <div class="header">
     <div class="header-logo">
-      <div class="logo-mark">史</div>
-      <span class="logo-text">臺史博 AI 助理</span>
+      <span class="museum-name">國立臺灣歷史博物館</span>
     </div>
     <div class="status-pill">
       <div class="status-dot"></div>
@@ -310,8 +416,8 @@ textarea::placeholder { color: var(--text-dimmer); }
   </div>
 
   <div class="greeting">
-    <h2 id="greetingText">你好，我是臺史博助理</h2>
-    <p id="greetingSubtext">點球球說話，或向上滑動查看對話</p>
+    <h2 id="greetingText">Gotour AI 智慧小助手</h2>
+    <p id="greetingSubtext">可以跟我對話，或是往上滑也可以用打字的喔</p>
   </div>
 
   <div class="orb-spacer"></div>
@@ -379,6 +485,76 @@ textarea::placeholder { color: var(--text-dimmer); }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
+
+// ═══════════════════════════════════════════════════
+// INTERACTIVE DOT GRID
+// ═══════════════════════════════════════════════════
+(function() {
+  const dc = document.getElementById('dotCanvas');
+  const ctx = dc.getContext('2d');
+  const DOT_SPACING = 20;
+  const DOT_R = 0.7;
+  const INFLUENCE = 80;
+  const WHITE = [255, 255, 255];
+  let mouse = { x: -999, y: -999 };
+  let dots = [];
+  let W, H;
+
+  function resize() {
+    W = dc.width = window.innerWidth;
+    H = dc.height = window.innerHeight;
+    dots = [];
+    for (let x = DOT_SPACING; x < W; x += DOT_SPACING) {
+      for (let y = DOT_SPACING; y < H; y += DOT_SPACING) {
+        dots.push({ x, y, r: DOT_R, alpha: 0, targetAlpha: 0 });
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const now = Date.now() * 0.001;
+
+    dots.forEach((d, i) => {
+      const dx = d.x - mouse.x;
+      const dy = d.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist < INFLUENCE) {
+        const t = 1 - dist / INFLUENCE;
+        d.targetAlpha = t * 0.55;
+  
+      } else {
+        // Subtle idle twinkle
+        d.targetAlpha = (Math.sin(now * 0.6 + d.x * 0.04 + d.y * 0.03) * 0.5 + 0.5) * 0.05;
+  
+      }
+
+      // Smooth interpolation
+      d.alpha += (d.targetAlpha - d.alpha) * 0.12;
+
+
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+
+      ctx.fillStyle = `rgba(255,255,255,${d.alpha})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('touchmove', e => {
+    if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+  }, { passive: true });
+  window.addEventListener('touchend', () => { mouse.x = -999; mouse.y = -999; });
+
+  resize();
+  draw();
+})();
+
 // ═══════════════════════════════════════════════════
 // THREE.JS ORB  (from aguscruiz/voiceorb, adapted)
 // ═══════════════════════════════════════════════════
@@ -390,38 +566,38 @@ let speakingCadence = { time:0, intensity:0, nextChange:0 };
 const orbStates = {
   idle: {
     layers: [
-      { color:0x434FCF, opacity:0.2, scale:1.0,  rotationSpeed:{x:0.001,y:0.002,z:0} },
-      { color:0x434FCF, opacity:0.2, scale:0.85, rotationSpeed:{x:-0.002,y:0.003,z:0.001} },
-      { color:0x434FCF, opacity:0.4, scale:0.70, rotationSpeed:{x:0.003,y:-0.002,z:-0.001} }
+      { color:0x00ffcc, opacity:0.45, scale:1.0,  rotationSpeed:{x:0.001,y:0.002,z:0} },
+      { color:0x00aaff, opacity:0.45, scale:0.85, rotationSpeed:{x:-0.002,y:0.003,z:0.001} },
+      { color:0xaa44ff, opacity:0.65, scale:0.70, rotationSpeed:{x:0.003,y:-0.002,z:-0.001} }
     ],
-    audioLevel:0.15, timeSpeed:0.015, pulsate:false, chromaticAberration:0.8
+    audioLevel:0.15, timeSpeed:0.015, pulsate:false, chromaticAberration:1.8
   },
   listening: {
     layers: [
-      { color:0x3B82F6, opacity:0.25, scale:1.0,  rotationSpeed:{x:0.002,y:0.004,z:0} },
-      { color:0x60A5FA, opacity:0.25, scale:0.85, rotationSpeed:{x:-0.003,y:0.005,z:0.002} },
-      { color:0x93C5FD, opacity:0.45, scale:0.70, rotationSpeed:{x:0.004,y:-0.003,z:-0.001} }
+      { color:0x00ffcc, opacity:0.55, scale:1.0,  rotationSpeed:{x:0.002,y:0.004,z:0} },
+      { color:0x44ffaa, opacity:0.55, scale:0.85, rotationSpeed:{x:-0.003,y:0.005,z:0.002} },
+      { color:0x00ddff, opacity:0.75, scale:0.70, rotationSpeed:{x:0.004,y:-0.003,z:-0.001} }
     ],
     audioLevel:0.6, timeSpeed:0.022, pulsate:true, pulsateMode:'audio-reactive',
-    pulsateMin:0.02, pulsateMax:0.28, chromaticAberration:1.2
+    pulsateMin:0.02, pulsateMax:0.28, chromaticAberration:2.2
   },
   thinking: {
     layers: [
-      { color:0x8747F7, opacity:0.2, scale:0.85, rotationSpeed:{x:0.003,y:0.003,z:0} },
-      { color:0x9D6BFF, opacity:0.2, scale:0.72, rotationSpeed:{x:-0.004,y:0.004,z:0.002} },
-      { color:0xB48AFF, opacity:0.4, scale:0.60, rotationSpeed:{x:0.005,y:-0.004,z:-0.002} }
+      { color:0xaa44ff, opacity:0.5, scale:0.85, rotationSpeed:{x:0.003,y:0.003,z:0} },
+      { color:0x8833ee, opacity:0.5, scale:0.72, rotationSpeed:{x:-0.004,y:0.004,z:0.002} },
+      { color:0xcc66ff, opacity:0.7, scale:0.60, rotationSpeed:{x:0.005,y:-0.004,z:-0.002} }
     ],
     audioLevel:0.45, timeSpeed:0.02, pulsate:true, pulsateMode:'thinking',
-    pulsateMin:0.0, pulsateMax:0.15, chromaticAberration:0.8
+    pulsateMin:0.0, pulsateMax:0.15, chromaticAberration:1.5
   },
   speaking: {
     layers: [
-      { color:0xFF1893, opacity:0.2, scale:1.0,  rotationSpeed:{x:0.004,y:0.005,z:0} },
-      { color:0xFF4DAA, opacity:0.2, scale:0.85, rotationSpeed:{x:-0.005,y:0.006,z:0.003} },
-      { color:0xFF80C0, opacity:0.4, scale:0.70, rotationSpeed:{x:0.006,y:-0.005,z:-0.002} }
+      { color:0xff66aa, opacity:0.55, scale:1.0,  rotationSpeed:{x:0.004,y:0.005,z:0} },
+      { color:0xff44aa, opacity:0.55, scale:0.85, rotationSpeed:{x:-0.005,y:0.006,z:0.003} },
+      { color:0xff88cc, opacity:0.72, scale:0.70, rotationSpeed:{x:0.006,y:-0.005,z:-0.002} }
     ],
     audioLevel:0.8, timeSpeed:0.027, pulsate:true, pulsateMode:'cadence',
-    pulsateMin:0.05, pulsateMax:0.25, chromaticAberration:1.5
+    pulsateMin:0.05, pulsateMax:0.25, chromaticAberration:2.8
   }
 };
 
@@ -471,6 +647,7 @@ const vertexShader = `
 const fragmentShader = `
   varying vec3 vNormal; varying vec3 vPosition; varying vec2 vUv;
   uniform vec3 sphereColor; uniform float opacity; uniform float time; uniform float chromaticAberration;
+
   vec3 rgb2hsv(vec3 c){
     vec4 K=vec4(0.,-1./3.,2./3.,-1.);
     vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));
@@ -483,28 +660,51 @@ const fragmentShader = `
     vec3 p=abs(fract(c.xxx+K.xyz)*6.-K.www);
     return c.z*mix(K.xxx,clamp(p-K.xxx,0.,1.),c.y);
   }
+
   void main(){
-    vec3 viewDirection=normalize(cameraPosition-vPosition);
-    float fresnel=pow(1.-abs(dot(viewDirection,normalize(vNormal))),2.);
-    vec3 normalWorld=normalize(vNormal);
-    float rainbowShift=normalWorld.x*0.5+normalWorld.y*0.2+normalWorld.z*0.1;
+    vec3 viewDir=normalize(cameraPosition-vPosition);
+    vec3 norm=normalize(vNormal);
+    float fresnel=pow(1.-abs(dot(viewDir,norm)),2.5);
+
+    /* ── Rainbow holographic shift ── */
+    float rainbowShift=norm.x*0.5+norm.y*0.2+norm.z*0.1;
     rainbowShift+=sin(vPosition.x*5.+time*0.5)*0.01+cos(vPosition.y*4.-time*0.3)*0.01;
     rainbowShift=fract(rainbowShift);
-    vec3 rainbow=hsv2rgb(vec3(rainbowShift,.8,1.));
+    vec3 rainbow=hsv2rgb(vec3(rainbowShift,0.9,1.2));
+
+    /* ── Chromatic aberration ── */
     vec3 hsv=rgb2hsv(sphereColor);
-    float aberrationAmount=chromaticAberration*fresnel;
-    vec3 hsvR=hsv;hsvR.x=fract(hsv.x+aberrationAmount*0.15);vec3 colorR=hsv2rgb(hsvR);
-    vec3 colorG=sphereColor;
-    vec3 hsvB=hsv;hsvB.x=fract(hsv.x-aberrationAmount*0.15);vec3 colorB=hsv2rgb(hsvB);
-    vec3 color=vec3(colorR.r,colorG.g,colorB.b);
-    float holographicIntensity=fresnel*0.6+0.2;
-    color=mix(color,rainbow,holographicIntensity*0.6);
-    color+=fresnel*chromaticAberration*0.15;
-    float brightness=1.+sin(vPosition.x*3.+time)*0.1+sin(vPosition.y*2.5-time*0.8)*0.1;
-    float shimmer=sin(vPosition.x*8.+vPosition.y*6.+time*2.)*0.04+0.96;
-    brightness*=shimmer;
-    color*=brightness;
-    gl_FragColor=vec4(color,opacity);
+    float ab=chromaticAberration*fresnel;
+    vec3 hsvR=hsv; hsvR.x=fract(hsv.x+ab*0.18); vec3 cR=hsv2rgb(hsvR);
+    vec3 hsvB=hsv; hsvB.x=fract(hsv.x-ab*0.18); vec3 cB=hsv2rgb(hsvB);
+    vec3 color=vec3(cR.r, sphereColor.g, cB.b);
+
+    /* ── Holographic blend ── */
+    float holoI=fresnel*0.75+0.15;
+    color=mix(color,rainbow,holoI*0.65);
+
+    /* ── Glass: dark interior, bright edge glow ── */
+    float edgeGlow=pow(fresnel, 1.2);
+    float interior=1.-edgeGlow;
+
+    /* Deep transparent interior */
+    float glassAlpha=mix(opacity*0.55, opacity*1.0, edgeGlow);
+
+    /* Edge color boost with aurora glow */
+    color+=edgeGlow*chromaticAberration*0.25;
+    color=mix(color*0.65, color*1.6, edgeGlow);
+
+    /* ── Shimmer ── */
+    float shimmer=sin(vPosition.x*8.+vPosition.y*6.+time*2.)*0.06+0.94;
+    float pulse=1.+sin(time*1.2)*0.08;
+    color*=shimmer*pulse;
+
+    /* ── Inner specular highlight (glass reflection) ── */
+    vec3 lightDir=normalize(vec3(0.5,0.8,1.0));
+    float spec=pow(max(dot(reflect(-lightDir,norm),viewDir),0.),32.);
+    color+=spec*0.7*vec3(0.8,1.0,1.0);
+
+    gl_FragColor=vec4(color, glassAlpha);
   }
 `;
 
@@ -515,6 +715,7 @@ function initOrb() {
 
   const canvas = document.getElementById('threeCanvas');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
@@ -541,11 +742,13 @@ function initOrb() {
     orbLayers.push(sphere);
   });
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.4));
-  const pl1 = new THREE.PointLight(0x667eea, 0.6, 100);
-  pl1.position.set(5, 5, 5); scene.add(pl1);
-  const pl2 = new THREE.PointLight(0x764ba2, 0.4, 100);
-  pl2.position.set(-5, -5, 5); scene.add(pl2);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+  const pl1 = new THREE.PointLight(0x00ffcc, 1.8, 80);
+  pl1.position.set(4, 4, 6); scene.add(pl1);
+  const pl2 = new THREE.PointLight(0xaa44ff, 1.4, 80);
+  pl2.position.set(-4, -4, 6); scene.add(pl2);
+  const pl3 = new THREE.PointLight(0xff66aa, 1.2, 60);
+  pl3.position.set(0, -5, 4); scene.add(pl3);
 
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -563,6 +766,20 @@ function setOrbState(stateName) {
   if (!orbStates[stateName]) return;
   currentOrbState = stateName;
   const state = orbStates[stateName];
+
+  // Update glow ring color based on state
+  const glowEl = document.getElementById('orbGlowRing');
+  if (glowEl) {
+    const glowColors = {
+      idle:      'rgba(0,255,200,0.18), rgba(0,170,255,0.10), rgba(170,68,255,0.07)',
+      listening: 'rgba(0,255,200,0.35), rgba(68,255,170,0.20), rgba(0,220,255,0.10)',
+      thinking:  'rgba(170,68,255,0.30), rgba(136,51,238,0.18), rgba(204,102,255,0.08)',
+      speaking:  'rgba(255,102,170,0.35), rgba(255,68,170,0.22), rgba(255,136,204,0.10)'
+    };
+    const c = glowColors[stateName] || glowColors.idle;
+    glowEl.style.background = `radial-gradient(circle, ${c}, transparent 75%)`;
+  }
+
   orbLayers.forEach((layer, idx) => {
     const lc = state.layers[idx];
     if (!lc) return;
@@ -774,7 +991,7 @@ async function speakText(text) {
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
     currentAudio.playsInline = true;
-    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); greetingText.textContent = '你好，我是臺史博助理'; greetingSubtext.textContent = '點球球說話，或向上滑動查看對話'; };
+    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); greetingText.textContent = 'Gotour AI 智慧小助手'; greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔'; };
     currentAudio.onerror = () => { setOrbState('idle'); setVoiceLabel(''); };
     const p = currentAudio.play();
     if (p !== undefined) {
