@@ -412,287 +412,100 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
 
 /* ── Map Drawer ──────────────────────────────────── */
 .map-drawer {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  z-index: 10;
-  height: 80%;
-  background: rgba(2,5,16,0.96);
-  border-top: 1px solid rgba(0,255,200,0.15);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 80%;
+  background: rgba(2,5,16,0.96); border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0; box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
   display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
   visibility: hidden;
 }
-.map-drawer.open {
-  transform: translateY(0);
-  visibility: visible;
-}
-.map-overlay {
+.map-drawer.open { transform: translateY(0); visibility: visible; }
+.map-overlay, .exhibit-overlay {
   position: fixed; inset: 0; z-index: 9;
-  background: rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none;
+  background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
   transition: opacity 0.3s;
 }
-.map-overlay.open { opacity: 1; pointer-events: all; }
-
-.map-handle {
-  width: 36px; height: 4px;
-  background: rgba(0,255,200,0.2);
-  border-radius: 2px;
-  margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
+.map-overlay.open, .exhibit-overlay.open { opacity: 1; pointer-events: all; }
+.map-handle, .exhibit-handle {
+  width: 36px; height: 4px; background: rgba(0,255,200,0.2);
+  border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
 }
-.map-header {
+.map-header, .exhibit-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 20px 0; flex-shrink: 0;
 }
-.map-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
-.map-close-btn {
+.map-header-title, .exhibit-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
+.map-close-btn, .exhibit-close-btn {
   background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
   cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.6);
+  display: flex; align-items: center; justify-content: center; color: rgba(0,255,200,0.6);
 }
-.map-close-btn svg { width: 14px; height: 14px; }
-
+.map-close-btn svg, .exhibit-close-btn svg { width: 14px; height: 14px; }
 .map-tabs {
   display: flex; margin: 12px 20px 0;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px; overflow: hidden; flex-shrink: 0;
 }
 .map-tab {
-  flex: 1; padding: 9px 0; background: none; border: none;
-  cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
-  font-size: 12px; color: rgba(255,255,255,0.45);
-  transition: all 0.2s; letter-spacing: 0.05em;
+  flex: 1; padding: 9px 0; background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.45); transition: all 0.2s; letter-spacing: 0.05em;
 }
 .map-tab.active { background: rgba(0,255,200,0.15); color: rgba(0,255,200,0.9); }
 .map-tab + .map-tab { border-left: 1px solid rgba(255,255,255,0.1); }
-
-.map-body {
-  flex: 1; overflow: hidden;
-  margin: 12px 16px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
-  position: relative;
-}
+.map-body { flex: 1; overflow: hidden; margin: 12px 16px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); position: relative; }
 .map-panel { display: none; width: 100%; height: 100%; position: relative; }
 .map-panel.active { display: block; }
-
-.map-zoom-wrap {
-  width: 100%; height: 100%;
-  overflow: hidden; position: relative;
-  cursor: grab; background: #000;
-}
+.map-zoom-wrap { width: 100%; height: 100%; overflow: hidden; position: relative; cursor: grab; background: #000; }
 .map-zoom-wrap:active { cursor: grabbing; }
-.map-zoom-inner {
-  width: 100%; height: 100%;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-.map-zoom-inner img {
-  width: 100%; height: 100%;
-  object-fit: contain; display: block;
-  pointer-events: none; user-select: none;
-}
-.map-zoom-btns {
-  position: absolute; bottom: 14px; right: 14px;
-  display: flex; flex-direction: column; gap: 6px; z-index: 2;
-}
-.map-zoom-btn {
-  width: 36px; height: 36px;
-  background: rgba(2,5,16,0.85);
-  border: 1px solid rgba(0,255,200,0.25);
-  border-radius: 10px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.85); font-size: 20px; font-weight: 300;
-}
-
-@media (min-width: 600px) {
-  .map-drawer {
-    max-width: 480px; left: 50%;
-    transform: translateX(-50%) translateY(100%);
-  }
-  .map-drawer.open { transform: translateX(-50%) translateY(0); }
-  .map-overlay { display: none; }
-}
-
+.map-zoom-inner { width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
+.map-zoom-inner img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; }
+.map-zoom-btns { position: absolute; bottom: 14px; right: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.map-zoom-btn { width: 36px; height: 36px; background: rgba(2,5,16,0.85); border: 1px solid rgba(0,255,200,0.25); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(0,255,200,0.85); font-size: 20px; }
 
 /* ── Exhibition Drawer ───────────────────────────── */
 .exhibit-drawer {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  z-index: 10;
-  height: 35%;
-  background: rgba(2,5,16,0.96);
-  border-top: 1px solid rgba(0,255,200,0.15);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 35%;
+  background: rgba(2,5,16,0.96); border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0; box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
   display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), height 0.4s cubic-bezier(0.32,0.72,0,1);
+  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), height 0.4s cubic-bezier(0.32,0.72,0,1);
   visibility: hidden;
 }
 .exhibit-drawer.open { transform: translateY(0); visibility: visible; }
 .exhibit-drawer.expanded { height: 85%; }
-
-.exhibit-overlay {
-  position: fixed; inset: 0; z-index: 9;
-  background: rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s;
-}
-.exhibit-overlay.open { opacity: 1; pointer-events: all; }
-
-.exhibit-handle {
-  width: 36px; height: 4px;
-  background: rgba(0,255,200,0.2); border-radius: 2px;
-  margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
-}
-.exhibit-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 20px 0; flex-shrink: 0;
-}
-.exhibit-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
-.exhibit-close-btn {
-  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
-  cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.6);
-}
-.exhibit-close-btn svg { width: 14px; height: 14px; }
-
-/* Horizontal scroll strip */
-.exhibit-strip {
-  flex: 1; overflow: hidden;
-  padding: 10px 16px 14px;
-  display: flex;
-}
-.exhibit-scroll {
-  display: flex; gap: 12px;
-  overflow-x: auto; overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
-  align-items: stretch;
-  width: 100%;
-}
+.exhibit-strip { flex: 1; overflow: hidden; padding: 10px 16px 14px; display: flex; }
+.exhibit-scroll { display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; align-items: stretch; width: 100%; }
 .exhibit-scroll::-webkit-scrollbar { display: none; }
-
-/* Compact card (35% mode) */
-.exhibit-card {
-  scroll-snap-align: start;
-  flex: 0 0 75vw;
-  max-width: 300px;
-  border-radius: 14px; overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  border: 1px solid rgba(0,255,200,0.12);
-  transition: border-color 0.2s;
-  display: flex; flex-direction: column;
-}
+.exhibit-card { scroll-snap-align: start; flex: 0 0 75vw; max-width: 300px; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative; border: 1px solid rgba(0,255,200,0.12); display: flex; flex-direction: column; }
 .exhibit-card:active { border-color: rgba(0,255,200,0.35); }
-
-.exhibit-card-img-wrap {
-  position: relative; width: 100%;
-  flex: 1; min-height: 0;
-  overflow: hidden;
-}
-.exhibit-card-banner {
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
-}
-/* Gradient overlay on image */
-.exhibit-card-img-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(2,5,16,0.92) 0%, rgba(2,5,16,0.5) 40%, transparent 70%);
-}
-.exhibit-card-name {
-  position: absolute; bottom: 8px; left: 12px; right: 12px;
-  font-size: 13px; font-weight: 400;
-  color: #fff; line-height: 1.4;
-  font-family: 'Noto Serif TC', serif;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-.exhibit-card-footer {
-  padding: 8px 12px;
-  background: rgba(2,5,16,0.96);
-  flex-shrink: 0;
-}
-.exhibit-card-meta {
-  font-size: 10px; color: rgba(200,240,255,0.5);
-  line-height: 1.6;
-}
-.exhibit-card-btn {
-  display: flex; align-items: center; gap: 4px;
-  margin-top: 5px; font-size: 10px;
-  color: rgba(0,255,200,0.7); letter-spacing: 0.05em;
-  background: none; border: none; padding: 0; cursor: pointer;
-}
+.exhibit-card-img-wrap { position: relative; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
+.exhibit-card-banner { width: 100%; height: 100%; object-fit: cover; display: block; }
+.exhibit-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,5,16,0.92) 0%, rgba(2,5,16,0.4) 45%, transparent 70%); }
+.exhibit-card-name { position: absolute; bottom: 8px; left: 12px; right: 12px; font-size: 13px; font-weight: 400; color: #fff; line-height: 1.4; font-family: 'Noto Serif TC', serif; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+.exhibit-card-footer { padding: 8px 12px; background: rgba(2,5,16,0.96); flex-shrink: 0; }
+.exhibit-card-meta { font-size: 10px; color: rgba(200,240,255,0.5); line-height: 1.6; }
+.exhibit-card-btn { display: flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 10px; color: rgba(0,255,200,0.7); letter-spacing: 0.05em; background: none; border: none; padding: 0; cursor: pointer; }
 .exhibit-card-btn svg { width: 11px; height: 11px; }
-
-/* Full detail panel (85% mode) */
-.exhibit-detail {
-  display: none;
-  flex: 1; flex-direction: column; overflow: hidden;
-}
+.exhibit-detail { display: none; flex: 1; flex-direction: column; overflow: hidden; }
 .exhibit-drawer.expanded .exhibit-strip { display: none; }
 .exhibit-drawer.expanded .exhibit-detail { display: flex; }
-
-.exhibit-detail-back {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 20px 0; flex-shrink: 0;
-  font-size: 12px; color: rgba(0,255,200,0.7);
-  cursor: pointer; background: none; border: none;
-  letter-spacing: 0.05em;
-}
+.exhibit-detail-back { display: flex; align-items: center; gap: 6px; padding: 8px 20px 0; flex-shrink: 0; font-size: 12px; color: rgba(0,255,200,0.7); cursor: pointer; background: none; border: none; letter-spacing: 0.05em; }
 .exhibit-detail-back svg { width: 14px; height: 14px; }
-
-.exhibit-detail-scroll {
-  flex: 1; overflow-y: auto;
-  padding: 12px 20px 24px;
-  -webkit-overflow-scrolling: touch;
-}
+.exhibit-detail-scroll { flex: 1; overflow-y: auto; padding: 12px 20px 24px; -webkit-overflow-scrolling: touch; }
 .exhibit-detail-scroll::-webkit-scrollbar { width: 0; }
-
-.exhibit-detail-banner {
-  width: 100%; height: 180px;
-  object-fit: cover; border-radius: 12px;
-  margin-bottom: 14px;
-}
-.exhibit-detail-badge {
-  display: inline-block; font-size: 9px;
-  background: rgba(0,255,200,0.12);
-  border: 1px solid rgba(0,255,200,0.25);
-  color: rgba(0,255,200,0.8);
-  padding: 2px 8px; border-radius: 20px;
-  letter-spacing: 0.08em; margin-bottom: 8px;
-}
-.exhibit-detail-title {
-  font-size: 17px; font-weight: 600;
-  color: rgba(255,255,255,0.92);
-  font-family: 'Noto Serif TC', serif;
-  line-height: 1.4; margin-bottom: 10px;
-}
-.exhibit-detail-meta {
-  font-size: 12px; color: rgba(200,240,255,0.55);
-  line-height: 2; margin-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 14px;
-}
-.exhibit-detail-desc {
-  font-size: 13px; color: rgba(200,240,255,0.7);
-  line-height: 1.9;
-  white-space: pre-line;
-}
+.exhibit-detail-banner { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 14px; }
+.exhibit-detail-badge { display: inline-block; font-size: 9px; background: rgba(0,255,200,0.12); border: 1px solid rgba(0,255,200,0.25); color: rgba(0,255,200,0.8); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.08em; margin-bottom: 8px; }
+.exhibit-detail-title { font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.92); font-family: 'Noto Serif TC', serif; line-height: 1.4; margin-bottom: 10px; }
+.exhibit-detail-meta { font-size: 12px; color: rgba(200,240,255,0.55); line-height: 2; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 14px; }
+.exhibit-detail-desc { font-size: 13px; color: rgba(200,240,255,0.7); line-height: 1.9; white-space: pre-line; }
 
 @media (min-width: 600px) {
-  .exhibit-drawer {
-    max-width: 480px; left: 50%;
-    transform: translateX(-50%) translateY(100%);
-  }
+  .map-drawer, .exhibit-drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
+  .map-drawer.open { transform: translateX(-50%) translateY(0); }
   .exhibit-drawer.open { transform: translateX(-50%) translateY(0); }
-  .exhibit-overlay { display: none; }
+  .exhibit-drawer.expanded { transform: translateX(-50%) translateY(0); }
+  .map-overlay, .exhibit-overlay { display: none; }
 }
 
 </style>
@@ -811,92 +624,15 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
 </div>
 
 <!-- Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
-// ── Map ────────────────────────────────────────────
-function openMapDrawer() {
-  document.getElementById('mapDrawer').classList.add('open');
-  document.getElementById('mapOverlay').classList.add('open');
-}
-function closeMapDrawer() {
-  document.getElementById('mapDrawer').classList.remove('open');
-  document.getElementById('mapOverlay').classList.remove('open');
-}
-function switchMapTab(btn, panelId) {
-  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(panelId).classList.add('active');
-}
-
-const mapS = {
-  Park:   { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 },
-  Indoor: { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 }
-};
-function applyMapTransform(n) {
-  const s = mapS[n];
-  document.getElementById('zoomInner'+n).style.transform = `translate(${s.x}px,${s.y}px) scale(${s.scale})`;
-}
-function mapZoom(n, f) {
-  mapS[n].scale = Math.min(Math.max(mapS[n].scale * f, 1), 5);
-  applyMapTransform(n);
-}
-['Park','Indoor'].forEach(n => {
-  const w = document.getElementById('zoomWrap'+n);
-  const s = mapS[n];
-  w.addEventListener('mousedown', e => { s.dragging=true; s.lx=e.clientX; s.ly=e.clientY; });
-  window.addEventListener('mousemove', e => {
-    if (!s.dragging) return;
-    s.x += e.clientX-s.lx; s.y += e.clientY-s.ly;
-    s.lx=e.clientX; s.ly=e.clientY; applyMapTransform(n);
-  });
-  window.addEventListener('mouseup', () => s.dragging=false);
-  w.addEventListener('touchstart', e => {
-    if (e.touches.length===1) { s.dragging=true; s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; }
-  },{passive:true});
-  w.addEventListener('touchmove', e => {
-    if (s.dragging && e.touches.length===1) {
-      s.x+=e.touches[0].clientX-s.lx; s.y+=e.touches[0].clientY-s.ly;
-      s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; applyMapTransform(n);
-    }
-  },{passive:true});
-  w.addEventListener('touchend', ()=>s.dragging=false,{passive:true});
-  let ld=0;
-  w.addEventListener('touchstart', e=>{
-    if(e.touches.length===2) ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-  },{passive:true});
-  w.addEventListener('touchmove', e=>{
-    if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}
-      ld=d;
-    }
-  },{passive:true});
-});
-// Swipe down to close - wrapped in DOMContentLoaded to ensure DOM exists
-let mty=0;
-window.addEventListener('DOMContentLoaded', () => {
-  const md = document.getElementById('mapDrawer');
-  if (md) {
-    md.addEventListener('touchstart', e=>{ mty=e.touches[0].clientY; },{passive:true});
-    md.addEventListener('touchend',   e=>{ if(e.changedTouches[0].clientY-mty>60) closeMapDrawer(); },{passive:true});
-  }
-});
-
-</script>
 
 <!-- Map overlay -->
 <div class="map-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
-
 <!-- Map Drawer -->
 <div class="map-drawer" id="mapDrawer">
   <div class="map-handle" onclick="closeMapDrawer()"></div>
   <div class="map-header">
     <span class="map-header-title">園區地圖</span>
-    <button class="map-close-btn" onclick="closeMapDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+    <button class="map-close-btn" onclick="closeMapDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
   <div class="map-tabs">
     <button class="map-tab active" onclick="switchMapTab(this,'mapPark')">臺灣歷史公園</button>
@@ -904,1125 +640,48 @@ window.addEventListener('DOMContentLoaded', () => {
   </div>
   <div class="map-body">
     <div class="map-panel active" id="mapPark">
-      <div class="map-zoom-wrap" id="zoomWrapPark">
-        <div class="map-zoom-inner" id="zoomInnerPark">
-          <img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button>
-      </div>
+      <div class="map-zoom-wrap" id="zoomWrapPark"><div class="map-zoom-inner" id="zoomInnerPark"><img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false"></div></div>
+      <div class="map-zoom-btns"><button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button><button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button></div>
     </div>
     <div class="map-panel" id="mapIndoor">
-      <div class="map-zoom-wrap" id="zoomWrapIndoor">
-        <div class="map-zoom-inner" id="zoomInnerIndoor">
-          <img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/indoor-map.jpg" alt="室內地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button>
-      </div>
+      <div class="map-zoom-wrap" id="zoomWrapIndoor"><div class="map-zoom-inner" id="zoomInnerIndoor"><img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/indoor-map.jpg" alt="室內地圖" draggable="false"></div></div>
+      <div class="map-zoom-btns"><button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button><button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button></div>
     </div>
   </div>
 </div>
 
 <!-- Exhibition overlay -->
 <div class="exhibit-overlay" id="exhibitOverlay" onclick="closeExhibitDrawer()"></div>
-
 <!-- Exhibition Drawer -->
 <div class="exhibit-drawer" id="exhibitDrawer">
   <div class="exhibit-handle" onclick="handleExhibitHandleTap()"></div>
   <div class="exhibit-header">
     <span class="exhibit-header-title">特展列表</span>
-    <button class="exhibit-close-btn" onclick="closeExhibitDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
+    <button class="exhibit-close-btn" onclick="closeExhibitDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
   </div>
-
-  <!-- Horizontal strip (35% view) -->
   <div class="exhibit-strip">
     <div class="exhibit-scroll">
-
       <div class="exhibit-card" onclick="openExhibitDetail(0)">
-        <div class="exhibit-card-img-wrap">
-          <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg" alt="轉機特展">
-          <div class="exhibit-card-img-overlay"></div>
-          <div class="exhibit-card-name">轉機：臺灣女子移動紀事特展</div>
-        </div>
-        <div class="exhibit-card-footer">
-          <div class="exhibit-card-meta">🗓 2025-12-23 ～ 2026-08-30<br>📍 4樓 第1特展室</div>
-          <button class="exhibit-card-btn">
-            展開說明
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        </div>
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg" alt="轉機特展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">轉機：臺灣女子移動紀事特展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2025-12-23 ～ 2026-08-30<br>📍 4樓 第1特展室</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
       </div>
-
       <div class="exhibit-card" onclick="openExhibitDetail(1)">
-        <div class="exhibit-card-img-wrap">
-          <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg" alt="地方記憶展">
-          <div class="exhibit-card-img-overlay"></div>
-          <div class="exhibit-card-name">地方記憶・遊牧：國家文化記憶庫社群合作成果展</div>
-        </div>
-        <div class="exhibit-card-footer">
-          <div class="exhibit-card-meta">🗓 2026-02-10 ～ 2026-05-31<br>📍 1樓 大廳</div>
-          <button class="exhibit-card-btn">
-            展開說明
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        </div>
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg" alt="地方記憶展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">地方記憶・遊牧：國家文化記憶庫社群合作成果展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2026-02-10 ～ 2026-05-31<br>📍 1樓 大廳</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
       </div>
-
       <div class="exhibit-card" onclick="openExhibitDetail(2)">
-        <div class="exhibit-card-img-wrap">
-          <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg" alt="桌遊特展">
-          <div class="exhibit-card-img-overlay"></div>
-          <div class="exhibit-card-name">開箱吧！臺史博館藏桌遊特展</div>
-        </div>
-        <div class="exhibit-card-footer">
-          <div class="exhibit-card-meta">🗓 2025-06-03 ～ 2026-04-26<br>📍 4樓 第3特展室</div>
-          <button class="exhibit-card-btn">
-            展開說明
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-        </div>
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg" alt="桌遊特展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">開箱吧！臺史博館藏桌遊特展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2025-06-03 ～ 2026-04-26<br>📍 4樓 第3特展室</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
       </div>
-
     </div>
   </div>
-
-  <!-- Detail panel (85% view) -->
   <div class="exhibit-detail" id="exhibitDetail">
-    <button class="exhibit-detail-back" onclick="closeExhibitDetail()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-      返回列表
-    </button>
+    <button class="exhibit-detail-back" onclick="closeExhibitDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回列表</button>
     <div class="exhibit-detail-scroll" id="exhibitDetailScroll"></div>
   </div>
 </div>
 
->
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>臺史博 AI 助理</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400&display=swap');
-
-:root {
-  --primary: #90E0EF;
-  --secondary: #FFCCBC;
-  --tertiary: #F48FB1;
-  --neutral: #F0F4F8;
-  --surface: rgba(255,255,255,0.18);
-  --surface2: rgba(255,255,255,0.28);
-  --border: rgba(255,255,255,0.38);
-  --accent: #F48FB1;
-  --text: #f0f8ff;
-  --text-dim: rgba(200,240,255,0.6);
-  --text-dimmer: rgba(200,240,255,0.35);
-  --user-bubble: rgba(244,143,177,0.18);
-  --user-border: rgba(244,143,177,0.32);
-  --drawer-bg: rgba(240,244,248,0.78);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-
-html, body {
-  height: 100%; height: 100dvh;
-  background: #020510;
-  color: var(--text);
-  font-family: 'Noto Sans TC', sans-serif;
-  font-weight: 300;
-  overflow: hidden;
-  user-select: none;
-}
-
-/* ── Canvas (Three.js) ───────────────────────────── */
-#threeCanvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 2;
-  cursor: pointer;
-  pointer-events: all;
-  background: transparent;
-}
-
-/* ── App overlay ─────────────────────────────────── */
-.app {
-  position: relative; z-index: 3;
-  height: 100%; height: 100dvh;
-  display: flex; flex-direction: column;
-  align-items: center;
-  pointer-events: none;
-}
-.app > * { pointer-events: all; }
-
-/* ── Header ──────────────────────────────────────── */
-.header {
-  width: 100%; padding: 18px 24px 0;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-}
-.header-logo { display: flex; align-items: center; justify-content: center; width: 100%; }
-.logo-mark {
-  width: 30px; height: 30px; border-radius: 8px;
-  background: linear-gradient(135deg, #00ffcc, #00aaff);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Noto Serif TC', serif;
-  font-size: 13px; color: #fff; font-weight: 600;
-}
-.logo-text { font-size: 13px; color: rgba(42,58,74,0.6); letter-spacing: 0.06em; }
-.status-pill {
-  display: flex; align-items: center; gap: 5px;
-  background: rgba(0,255,200,0.08);
-  border: 1px solid rgba(0,255,200,0.2);
-  border-radius: 20px; padding: 4px 10px;
-  font-size: 10px; color: rgba(0,255,200,0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-}
-.status-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: #00ffcc;
-  box-shadow: 0 0 8px rgba(0,255,200,0.9);
-  animation: sPulse 2.5s ease-in-out infinite;
-}
-@keyframes sPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-/* ── Greeting ────────────────────────────────────── */
-.greeting {
-  margin-top: 52px;
-  text-align: center;
-  pointer-events: none;
-}
-.greeting h2 {
-  font-family: 'Noto Serif TC', serif;
-  font-size: 26px; font-weight: 600;
-  letter-spacing: 0.04em;
-  color: rgba(255,255,255,0.92);
-  text-shadow: 0 0 30px rgba(0,255,200,0.4);
-}
-.greeting p {
-  font-size: 11px; color: rgba(200,240,255,0.6);
-  margin-top: 10px; letter-spacing: 0.05em;
-  text-shadow: 0 0 15px rgba(0,255,200,0.2);
-}
-
-/* ── Center spacer (canvas takes up most of screen) ── */
-.orb-spacer { flex: 1; pointer-events: none; }
-
-/* ── Voice label ─────────────────────────────────── */
-.voice-label {
-  font-size: 12px; color: var(--text-dim);
-  letter-spacing: 0.08em;
-  height: 20px;
-  transition: opacity 0.3s;
-  text-align: center;
-  pointer-events: none;
-}
-
-/* ── Bottom bar ──────────────────────────────────── */
-
-
-.bottom-bar {
-  width: 100%; padding: 14px 24px 20px;
-  display: flex; align-items: center; justify-content: center;
-}
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .bottom-bar { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
-}
-.tab-bar {
-  display: flex; align-items: center;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.22);
-  border-radius: 28px;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  overflow: hidden;
-}
-.tab-icon-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 5px;
-  background: none; border: none;
-  cursor: pointer;
-  padding: 10px 24px;
-  transition: background 0.2s;
-  position: relative;
-  flex: 1;
-}
-.tab-icon-btn + .tab-icon-btn {
-  border-left: 1px solid rgba(255,255,255,0.15);
-}
-.tab-icon-btn:active { background: rgba(255,255,255,0.15); }
-.tab-icon-btn svg { width: 20px; height: 20px; }
-.tab-icon-btn span { font-size: 9px; color: #ffffff; letter-spacing: 0.05em; display: block; }
-.chat-tab-btn svg { width: 22px; height: 22px; }
-.chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; color: rgba(200,240,255,0.6); }
-.tab-icon-btn.has-messages .notif-dot {
-  display: block;
-}
-.notif-dot {
-  display: none;
-  position: absolute; top: 6px; right: 12px;
-  width: 7px; height: 7px;
-  background: #F48FB1; border-radius: 50%;
-  box-shadow: 0 0 6px rgba(244,143,177,0.7);
-}
-
-/* ── Drawer ──────────────────────────────────────── */
-.drawer-overlay {
-  position: fixed; inset: 0; z-index: 9;
-  background: rgba(0,0,0,0.35);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s;
-  backdrop-filter: blur(3px);
-}
-.drawer-overlay.open { opacity: 1; pointer-events: all; }
-
-.drawer {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-  height: 64%;
-  background: rgba(2,5,16,0.85);
-  border-top: 1px solid rgba(0,255,200,0.15);
-  border-radius: 22px 22px 0 0;
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  box-shadow: 0 -8px 48px rgba(0,255,200,0.1);
-  display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
-}
-.drawer.open { transform: translateY(0); }
-
-.drawer-handle {
-  width: 36px; height: 4px;
-  background: rgba(0,255,200,0.2);
-  border-radius: 2px;
-  margin: 12px auto 0;
-  cursor: pointer; flex-shrink: 0;
-}
-.drawer-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px 6px; flex-shrink: 0;
-}
-.drawer-title {
-  font-size: 12px; color: rgba(0,255,200,0.6);
-  letter-spacing: 0.06em;
-  display: flex; align-items: center; gap: 6px;
-}
-.drawer-title svg { width: 12px; height: 12px; opacity: 0.5; }
-.drawer-close-btn {
-  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); cursor: pointer;
-  width: 26px; height: 26px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.6);
-}
-.drawer-close-btn svg { width: 13px; height: 13px; }
-
-.chip-row {
-  display: flex; flex-wrap: wrap; gap: 6px;
-  padding: 0 16px 8px; flex-shrink: 0;
-}
-.chip-btn {
-  background: rgba(0,255,200,0.07); border: 1px solid rgba(0,255,200,0.18);
-  color: rgba(200,240,255,0.65); font-family: 'Noto Sans TC', sans-serif;
-  font-size: 11px; padding: 5px 11px; border-radius: 20px;
-  cursor: pointer; white-space: nowrap; -webkit-appearance: none;
-  transition: all 0.15s; backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(200,140,200,0.1);
-}
-.chip-btn:active { border-color: rgba(144,224,239,0.5); background: rgba(255,255,255,0.55); }
-
-.chat-area {
-  flex: 1; overflow-y: auto; padding: 6px 16px 10px;
-  display: flex; flex-direction: column; gap: 12px;
-  scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
-}
-.chat-area::-webkit-scrollbar { width: 0; }
-
-.chat-empty {
-  flex: 1; display: flex; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.chat-empty p { font-size: 12px; color: var(--text-dimmer); text-align: center; line-height: 1.9; }
-
-.msg { display: flex; gap: 8px; animation: msgIn 0.22s ease; }
-.msg.user { flex-direction: row-reverse; }
-@keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
-
-.avatar {
-  width: 24px; height: 24px; border-radius: 7px;
-  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  font-size: 10px; font-weight: 500; margin-top: 2px;
-}
-.avatar.bot {
-  background: #fff;
-  overflow: hidden;
-  padding: 0;
-}
-.avatar.bot img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-.avatar.user { background: var(--surface2); color: var(--text-dim); }
-
-.bubble {
-  max-width: calc(100% - 66px);
-  padding: 9px 12px; font-size: 13px; line-height: 1.8;
-  border-radius: 14px; word-break: break-word;
-}
-.bubble.bot { background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); color: #f0f8ff; border-top-left-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.bubble.user { background: rgba(170,68,255,0.15); border: 1px solid rgba(170,68,255,0.3); color: #f0f8ff; border-top-right-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.bubble.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
-
-.typing { display: flex; gap: 8px; align-items: flex-end; }
-.typing-dots {
-  background: var(--surface); border: 1px solid var(--border);
-  border-top-left-radius: 3px; border-radius: 14px;
-  padding: 11px 14px; display: flex; gap: 4px; align-items: center;
-}
-.typing-dots span {
-  width: 4px; height: 4px; background: var(--text-dim);
-  border-radius: 50%; animation: tdB 1.2s infinite;
-}
-.typing-dots span:nth-child(2){animation-delay:0.2s}
-.typing-dots span:nth-child(3){animation-delay:0.4s}
-@keyframes tdB{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-5px);opacity:1}}
-
-.drawer-input-area {
-  padding: 8px 14px 12px; border-top: 1px solid var(--border); flex-shrink: 0;
-}
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .drawer-input-area { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
-}
-.drawer-input-wrap {
-  display: flex; gap: 7px; align-items: flex-end;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(0,255,200,0.2);
-  border-radius: 14px; padding: 8px 11px; transition: all 0.2s;
-  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 2px 12px rgba(200,140,200,0.1);
-}
-.drawer-input-wrap:focus-within { border-color: rgba(0,255,200,0.4); box-shadow: 0 2px 20px rgba(0,255,200,0.15); }
-textarea {
-  flex: 1; background: transparent; border: none; outline: none;
-  color: var(--text); font-family: 'Noto Sans TC', sans-serif;
-  font-size: 14px; font-weight: 300; resize: none;
-  line-height: 1.6; max-height: 80px; min-height: 22px; padding: 0;
-}
-textarea::placeholder { color: rgba(0,255,200,0.3); }
-.send-btn {
-  width: 32px; height: 32px;
-  background: linear-gradient(135deg, #00ffcc, #00aaff);
-  border: none; border-radius: 9px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; -webkit-appearance: none; transition: opacity 0.2s;
-}
-.send-btn:active { opacity: 0.8; }
-.send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-.send-btn svg { width: 13px; height: 13px; fill: #fff; }
-
-/* ── Tablet / Desktop ────────────────────────────── */
-@media (min-width: 600px) {
-  .greeting h2 { font-size: 24px; }
-  .drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
-  .drawer.open { transform: translateX(-50%) translateY(0); }
-  .drawer-overlay { display: none; }
-}
-
-
-/* ── Aurora background ───────────────────────────── */
-@property --a1{syntax:'<angle>';initial-value:0deg;inherits:false}
-@property --a2{syntax:'<angle>';initial-value:60deg;inherits:false}
-@property --a3{syntax:'<angle>';initial-value:120deg;inherits:false}
-
-.aurora-bg {
-  position: fixed; inset: 0; z-index: 0;
-  overflow: hidden;
-  background: #020510;
-}
-
-.aurora-layer {
-  position: absolute; inset: 0;
-  filter: blur(55px);
-  opacity: 0.82;
-  animation: auroraPulse 14s ease-in-out infinite alternate;
-}
-@keyframes auroraPulse {
-  0%   { opacity: 0.7;  filter: blur(55px); }
-  50%  { opacity: 0.92; filter: blur(45px); }
-  100% { opacity: 0.72; filter: blur(65px); }
-}
-
-.aurora-band {
-  position: absolute;
-  width: 200%; left: -50%;
-  border-radius: 50%;
-  transform-origin: center center;
-}
-
-.ab1 {
-  height: 80vh; top: -20vh;
-  background: conic-gradient(from var(--a1) at 40% 60%,
-    transparent 0%,
-    rgba(0,255,200,0.5)  12%,
-    rgba(0,170,255,0.4)  28%,
-    transparent 42%,
-    rgba(170,68,255,0.3) 58%,
-    transparent 72%
-  );
-  animation: ab1spin 20s linear infinite;
-}
-@keyframes ab1spin { to { --a1: 360deg } }
-
-.ab2 {
-  height: 85vh; top: 0vh;
-  background: conic-gradient(from var(--a2) at 62% 38%,
-    transparent 0%,
-    rgba(255,102,170,0.4) 10%,
-    rgba(0,255,200,0.3)   26%,
-    transparent 40%,
-    rgba(0,170,255,0.5)   54%,
-    transparent 68%
-  );
-  animation: ab2spin 28s linear infinite reverse;
-}
-@keyframes ab2spin { to { --a2: 420deg } }
-
-.ab3 {
-  height: 70vh; top: -5vh;
-  background: conic-gradient(from var(--a3) at 28% 72%,
-    transparent 0%,
-    rgba(68,255,170,0.4)  18%,
-    transparent 32%,
-    rgba(255,102,170,0.3) 48%,
-    rgba(170,68,255,0.4)  62%,
-    transparent 78%
-  );
-  animation: ab3spin 22s linear infinite;
-}
-@keyframes ab3spin { to { --a3: 480deg } }
-
-.museum-name {
-  font-size: 15px;
-  font-weight: 300;
-  color: rgba(255,255,255,0.85);
-  letter-spacing: 0.14em;
-  font-family: 'Noto Serif TC', serif;
-}
-
-/* ── Map Drawer ──────────────────────────────────── */
-.map-drawer {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  z-index: 10;
-  height: 80%;
-  background: rgba(2,5,16,0.96);
-  border-top: 1px solid rgba(0,255,200,0.15);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
-  display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
-  visibility: hidden;
-}
-.map-drawer.open {
-  transform: translateY(0);
-  visibility: visible;
-}
-.map-overlay {
-  position: fixed; inset: 0; z-index: 9;
-  background: rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s;
-}
-.map-overlay.open { opacity: 1; pointer-events: all; }
-
-.map-handle {
-  width: 36px; height: 4px;
-  background: rgba(0,255,200,0.2);
-  border-radius: 2px;
-  margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
-}
-.map-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px 0; flex-shrink: 0;
-}
-.map-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
-.map-close-btn {
-  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
-  cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.6);
-}
-.map-close-btn svg { width: 14px; height: 14px; }
-
-.map-tabs {
-  display: flex; margin: 12px 20px 0;
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px; overflow: hidden; flex-shrink: 0;
-}
-.map-tab {
-  flex: 1; padding: 9px 0; background: none; border: none;
-  cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
-  font-size: 12px; color: rgba(255,255,255,0.45);
-  transition: all 0.2s; letter-spacing: 0.05em;
-}
-.map-tab.active { background: rgba(0,255,200,0.15); color: rgba(0,255,200,0.9); }
-.map-tab + .map-tab { border-left: 1px solid rgba(255,255,255,0.1); }
-
-.map-body {
-  flex: 1; overflow: hidden;
-  margin: 12px 16px 16px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.08);
-  position: relative;
-}
-.map-panel { display: none; width: 100%; height: 100%; position: relative; }
-.map-panel.active { display: block; }
-
-.map-zoom-wrap {
-  width: 100%; height: 100%;
-  overflow: hidden; position: relative;
-  cursor: grab; background: #000;
-}
-.map-zoom-wrap:active { cursor: grabbing; }
-.map-zoom-inner {
-  width: 100%; height: 100%;
-  transform-origin: 0 0;
-  will-change: transform;
-}
-.map-zoom-inner img {
-  width: 100%; height: 100%;
-  object-fit: contain; display: block;
-  pointer-events: none; user-select: none;
-}
-.map-zoom-btns {
-  position: absolute; bottom: 14px; right: 14px;
-  display: flex; flex-direction: column; gap: 6px; z-index: 2;
-}
-.map-zoom-btn {
-  width: 36px; height: 36px;
-  background: rgba(2,5,16,0.85);
-  border: 1px solid rgba(0,255,200,0.25);
-  border-radius: 10px; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.85); font-size: 20px; font-weight: 300;
-}
-
-@media (min-width: 600px) {
-  .map-drawer {
-    max-width: 480px; left: 50%;
-    transform: translateX(-50%) translateY(100%);
-  }
-  .map-drawer.open { transform: translateX(-50%) translateY(0); }
-  .map-overlay { display: none; }
-}
-
-
-/* ── Exhibition Drawer ───────────────────────────── */
-.exhibit-drawer {
-  position: fixed; left: 0; right: 0; bottom: 0;
-  z-index: 10;
-  height: 35%;
-  background: rgba(2,5,16,0.96);
-  border-top: 1px solid rgba(0,255,200,0.15);
-  border-radius: 22px 22px 0 0;
-  box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
-  display: flex; flex-direction: column;
-  transform: translateY(100%);
-  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), height 0.4s cubic-bezier(0.32,0.72,0,1);
-  visibility: hidden;
-}
-.exhibit-drawer.open { transform: translateY(0); visibility: visible; }
-.exhibit-drawer.expanded { height: 85%; }
-
-.exhibit-overlay {
-  position: fixed; inset: 0; z-index: 9;
-  background: rgba(0,0,0,0.4);
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.3s;
-}
-.exhibit-overlay.open { opacity: 1; pointer-events: all; }
-
-.exhibit-handle {
-  width: 36px; height: 4px;
-  background: rgba(0,255,200,0.2); border-radius: 2px;
-  margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
-}
-.exhibit-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 8px 20px 0; flex-shrink: 0;
-}
-.exhibit-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
-.exhibit-close-btn {
-  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
-  cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  color: rgba(0,255,200,0.6);
-}
-.exhibit-close-btn svg { width: 14px; height: 14px; }
-
-/* Horizontal scroll strip */
-.exhibit-strip {
-  flex: 1; overflow: hidden;
-  padding: 10px 16px 14px;
-  display: flex;
-}
-.exhibit-scroll {
-  display: flex; gap: 12px;
-  overflow-x: auto; overflow-y: hidden;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  padding-bottom: 4px;
-  align-items: stretch;
-  width: 100%;
-}
-.exhibit-scroll::-webkit-scrollbar { display: none; }
-
-/* Compact card (35% mode) */
-.exhibit-card {
-  scroll-snap-align: start;
-  flex: 0 0 75vw;
-  max-width: 300px;
-  border-radius: 14px; overflow: hidden;
-  cursor: pointer;
-  position: relative;
-  border: 1px solid rgba(0,255,200,0.12);
-  transition: border-color 0.2s;
-  display: flex; flex-direction: column;
-}
-.exhibit-card:active { border-color: rgba(0,255,200,0.35); }
-
-.exhibit-card-img-wrap {
-  position: relative; width: 100%;
-  flex: 1; min-height: 0;
-  overflow: hidden;
-}
-.exhibit-card-banner {
-  width: 100%; height: 100%;
-  object-fit: cover; display: block;
-}
-/* Gradient overlay on image */
-.exhibit-card-img-overlay {
-  position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(2,5,16,0.92) 0%, rgba(2,5,16,0.5) 40%, transparent 70%);
-}
-.exhibit-card-name {
-  position: absolute; bottom: 8px; left: 12px; right: 12px;
-  font-size: 13px; font-weight: 400;
-  color: #fff; line-height: 1.4;
-  font-family: 'Noto Serif TC', serif;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-}
-.exhibit-card-footer {
-  padding: 8px 12px;
-  background: rgba(2,5,16,0.96);
-  flex-shrink: 0;
-}
-.exhibit-card-meta {
-  font-size: 10px; color: rgba(200,240,255,0.5);
-  line-height: 1.6;
-}
-.exhibit-card-btn {
-  display: flex; align-items: center; gap: 4px;
-  margin-top: 5px; font-size: 10px;
-  color: rgba(0,255,200,0.7); letter-spacing: 0.05em;
-  background: none; border: none; padding: 0; cursor: pointer;
-}
-.exhibit-card-btn svg { width: 11px; height: 11px; }
-
-/* Full detail panel (85% mode) */
-.exhibit-detail {
-  display: none;
-  flex: 1; flex-direction: column; overflow: hidden;
-}
-.exhibit-drawer.expanded .exhibit-strip { display: none; }
-.exhibit-drawer.expanded .exhibit-detail { display: flex; }
-
-.exhibit-detail-back {
-  display: flex; align-items: center; gap: 6px;
-  padding: 8px 20px 0; flex-shrink: 0;
-  font-size: 12px; color: rgba(0,255,200,0.7);
-  cursor: pointer; background: none; border: none;
-  letter-spacing: 0.05em;
-}
-.exhibit-detail-back svg { width: 14px; height: 14px; }
-
-.exhibit-detail-scroll {
-  flex: 1; overflow-y: auto;
-  padding: 12px 20px 24px;
-  -webkit-overflow-scrolling: touch;
-}
-.exhibit-detail-scroll::-webkit-scrollbar { width: 0; }
-
-.exhibit-detail-banner {
-  width: 100%; height: 180px;
-  object-fit: cover; border-radius: 12px;
-  margin-bottom: 14px;
-}
-.exhibit-detail-badge {
-  display: inline-block; font-size: 9px;
-  background: rgba(0,255,200,0.12);
-  border: 1px solid rgba(0,255,200,0.25);
-  color: rgba(0,255,200,0.8);
-  padding: 2px 8px; border-radius: 20px;
-  letter-spacing: 0.08em; margin-bottom: 8px;
-}
-.exhibit-detail-title {
-  font-size: 17px; font-weight: 600;
-  color: rgba(255,255,255,0.92);
-  font-family: 'Noto Serif TC', serif;
-  line-height: 1.4; margin-bottom: 10px;
-}
-.exhibit-detail-meta {
-  font-size: 12px; color: rgba(200,240,255,0.55);
-  line-height: 2; margin-bottom: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 14px;
-}
-.exhibit-detail-desc {
-  font-size: 13px; color: rgba(200,240,255,0.7);
-  line-height: 1.9;
-  white-space: pre-line;
-}
-
-@media (min-width: 600px) {
-  .exhibit-drawer {
-    max-width: 480px; left: 50%;
-    transform: translateX(-50%) translateY(100%);
-  }
-  .exhibit-drawer.open { transform: translateX(-50%) translateY(0); }
-  .exhibit-overlay { display: none; }
-}
-
-</style>
-</head>
-<body>
-
-<!-- Aurora background -->
-<div class="aurora-bg">
-  <div class="aurora-layer">
-    <div class="aurora-band ab1"></div>
-    <div class="aurora-band ab2"></div>
-    <div class="aurora-band ab3"></div>
-  </div>
-</div>
-
-<!-- Orb glow ring -->
-<div class="orb-glow-ring" id="orbGlowRing"></div>
-
-<!-- Dot grid -->
-<canvas id="dotCanvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
-
-<!-- Three.js canvas -->
-<canvas id="threeCanvas"></canvas>
-
-<div class="app">
-  <div class="header">
-    <div class="header-logo">
-      <span class="museum-name">國立臺灣歷史博物館</span>
-    </div>
-    <div class="status-pill">
-      <div class="status-dot"></div>
-      <span>線上服務中</span>
-    </div>
-  </div>
-
-  <div class="greeting">
-    <h2 id="greetingText">Gotour AI 智慧小助手</h2>
-    <p id="greetingSubtext">可以跟我對話，或是往上滑也可以用打字的喔</p>
-  </div>
-
-  <div class="orb-spacer"></div>
-
-  <div class="voice-label" id="voiceLabel"></div>
-
-  <div class="bottom-bar">
-    <div class="tab-bar">
-    <button class="tab-icon-btn" id="chatTabBtn" onclick="openDrawer()">
-      <div class="notif-dot"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      <span>對話記錄</span>
-    </button>
-    <button class="tab-icon-btn" onclick="openExhibitDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-      <span>展覽列表</span>
-    </button>
-    <button class="tab-icon-btn" onclick="openMapDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-        <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
-      </svg>
-      <span>園區地圖</span>
-    </button>
-    </div>
-  </div>
-</div>
-
-<!-- Drawer overlay -->
-<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
-
-<!-- Drawer -->
-<div class="drawer" id="drawer">
-  <div class="drawer-handle" onclick="closeDrawer()"></div>
-  <div class="drawer-header">
-    <div class="drawer-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-      </svg>
-      對話記錄
-    </div>
-    <button class="drawer-close-btn" onclick="closeDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-
-  <div class="chip-row" id="chipRow">
-    <button class="chip-btn" onclick="askChip(this)">幾點開館？</button>
-    <button class="chip-btn" onclick="askChip(this)">票價多少？</button>
-    <button class="chip-btn" onclick="askChip(this)">現在有哪些特展？</button>
-    <button class="chip-btn" onclick="askChip(this)">怎麼搭公車來？</button>
-    <button class="chip-btn" onclick="askChip(this)">可以帶寵物嗎？</button>
-    <button class="chip-btn" onclick="askChip(this)">停車多少錢？</button>
-  </div>
-
-  <div class="chat-area" id="chatArea">
-    <div class="chat-empty" id="chatEmpty">
-      <p>點球球說話<br>或在下方輸入問題</p>
-    </div>
-  </div>
-
-  <div class="drawer-input-area">
-    <div class="drawer-input-wrap">
-      <textarea id="userInput" placeholder="輸入問題…" rows="1"
-        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
-        <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Three.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
-// ── Map ────────────────────────────────────────────
-function openMapDrawer() {
-  document.getElementById('mapDrawer').classList.add('open');
-  document.getElementById('mapOverlay').classList.add('open');
-}
-function closeMapDrawer() {
-  document.getElementById('mapDrawer').classList.remove('open');
-  document.getElementById('mapOverlay').classList.remove('open');
-}
-function switchMapTab(btn, panelId) {
-  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(panelId).classList.add('active');
-}
-
-const mapS = {
-  Park:   { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 },
-  Indoor: { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 }
-};
-function applyMapTransform(n) {
-  const s = mapS[n];
-  document.getElementById('zoomInner'+n).style.transform = `translate(${s.x}px,${s.y}px) scale(${s.scale})`;
-}
-function mapZoom(n, f) {
-  mapS[n].scale = Math.min(Math.max(mapS[n].scale * f, 1), 5);
-  applyMapTransform(n);
-}
-['Park','Indoor'].forEach(n => {
-  const w = document.getElementById('zoomWrap'+n);
-  const s = mapS[n];
-  w.addEventListener('mousedown', e => { s.dragging=true; s.lx=e.clientX; s.ly=e.clientY; });
-  window.addEventListener('mousemove', e => {
-    if (!s.dragging) return;
-    s.x += e.clientX-s.lx; s.y += e.clientY-s.ly;
-    s.lx=e.clientX; s.ly=e.clientY; applyMapTransform(n);
-  });
-  window.addEventListener('mouseup', () => s.dragging=false);
-  w.addEventListener('touchstart', e => {
-    if (e.touches.length===1) { s.dragging=true; s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; }
-  },{passive:true});
-  w.addEventListener('touchmove', e => {
-    if (s.dragging && e.touches.length===1) {
-      s.x+=e.touches[0].clientX-s.lx; s.y+=e.touches[0].clientY-s.ly;
-      s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; applyMapTransform(n);
-    }
-  },{passive:true});
-  w.addEventListener('touchend', ()=>s.dragging=false,{passive:true});
-  let ld=0;
-  w.addEventListener('touchstart', e=>{
-    if(e.touches.length===2) ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-  },{passive:true});
-  w.addEventListener('touchmove', e=>{
-    if(e.touches.length===2){
-      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-      if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}
-      ld=d;
-    }
-  },{passive:true});
-});
-// Swipe down to close - wrapped in DOMContentLoaded to ensure DOM exists
-let mty=0;
-window.addEventListener('DOMContentLoaded', () => {
-  const md = document.getElementById('mapDrawer');
-  if (md) {
-    md.addEventListener('touchstart', e=>{ mty=e.touches[0].clientY; },{passive:true});
-    md.addEventListener('touchend',   e=>{ if(e.changedTouches[0].clientY-mty>60) closeMapDrawer(); },{passive:true});
-  }
-});
-
-</script>
-
-<!-- Map overlay -->
-<div class="map-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
-
-<!-- Map Drawer -->
-<div class="map-drawer" id="mapDrawer">
-  <div class="map-handle" onclick="closeMapDrawer()"></div>
-  <div class="map-header">
-    <span class="map-header-title">園區地圖</span>
-    <button class="map-close-btn" onclick="closeMapDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="map-tabs">
-    <button class="map-tab active" onclick="switchMapTab(this,'mapPark')">臺灣歷史公園</button>
-    <button class="map-tab" onclick="switchMapTab(this,'mapIndoor')">室內地圖</button>
-  </div>
-  <div class="map-body">
-    <div class="map-panel active" id="mapPark">
-      <div class="map-zoom-wrap" id="zoomWrapPark">
-        <div class="map-zoom-inner" id="zoomInnerPark">
-          <img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button>
-      </div>
-    </div>
-    <div class="map-panel" id="mapIndoor">
-      <div class="map-zoom-wrap" id="zoomWrapIndoor">
-        <div class="map-zoom-inner" id="zoomInnerIndoor">
-          <img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/indoor-map.jpg" alt="室內地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Exhibition overlay -->
-<div class="exhibit-overlay" id="exhibitOverlay" onclick="closeExhibitDrawer()"></div>
-
-<!-- Exhibition Drawer -->
-<div class="exhibit-drawer" id="exhibitDrawer">
-  <div class="exhibit-handle" onclick="closeExhibitDrawer()"></div>
-  <div class="exhibit-header">
-    <span class="exhibit-header-title">特展列表</span>
-    <button class="exhibit-close-btn" onclick="closeExhibitDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="exhibit-list">
-
-    <!-- 展覽 1 -->
-    <div class="exhibit-card" id="ec1" onclick="toggleExhibitCard('ec1')">
-      <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg" alt="轉機特展">
-      <div class="exhibit-card-header">
-        <div class="exhibit-badge">進行中</div>
-        <div class="exhibit-card-title">轉機：臺灣女子移動紀事特展</div>
-        <div class="exhibit-meta">
-          <span>🗓 2025-12-23 ～ 2026-08-30</span>
-          <span>📍 展示教育大樓 4樓 第1特展室</span>
-        </div>
-      </div>
-      <div class="exhibit-toggle">
-        <span>展開說明</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="exhibit-card-body" id="ec1-body">
-        <div class="exhibit-card-desc">以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
-
-展覽動線分為「國內線」與「國際線」，穿梭於9個登機門（GATE），走進16位女性人物的生命旅途。從日本時代新式產婆、1949年女性攜老幼重建家園、1970年代鐵道隨車員與藝霞歌舞劇團，到臺灣第一位環球旅行者張聰明、旅居撒哈拉的三毛……</div>
-      </div>
-    </div>
-
-    <!-- 展覽 2 -->
-    <div class="exhibit-card" id="ec2" onclick="toggleExhibitCard('ec2')">
-      <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg" alt="地方記憶展">
-      <div class="exhibit-card-header">
-        <div class="exhibit-badge">進行中</div>
-        <div class="exhibit-card-title">地方記憶・遊牧：國家文化記憶庫社群合作成果展</div>
-        <div class="exhibit-meta">
-          <span>🗓 2026-02-10 ～ 2026-05-31</span>
-          <span>📍 展示教育大樓 1樓 大廳</span>
-        </div>
-      </div>
-      <div class="exhibit-toggle">
-        <span>展開說明</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="exhibit-card-body" id="ec2-body">
-        <div class="exhibit-card-desc">藉由數位科技與社群共創的力量，保存臺灣多元的文化記憶。自2021年起，本館積極推動國家文化記憶庫計畫，足跡遍及城市、小鎮、鄉村與部落。
-
-展覽設有「教案小屋」、「光影故事帳」、「聲音角落」、「下一段記憶遊牧」四大區域，帶領觀眾從桃園大溪、彰化溪州、臺東都蘭等地，探索島嶼不同角落的文化記憶。</div>
-      </div>
-    </div>
-
-    <!-- 展覽 3 -->
-    <div class="exhibit-card" id="ec3" onclick="toggleExhibitCard('ec3')">
-      <img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg" alt="桌遊特展">
-      <div class="exhibit-card-header">
-        <div class="exhibit-badge">即將結束</div>
-        <div class="exhibit-card-title">開箱吧！臺史博館藏桌遊特展</div>
-        <div class="exhibit-meta">
-          <span>🗓 2025-06-03 ～ 2026-04-26</span>
-          <span>📍 展示教育大樓 4樓 第3特展室</span>
-        </div>
-      </div>
-      <div class="exhibit-toggle">
-        <span>展開說明</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-      </div>
-      <div class="exhibit-card-body" id="ec3-body">
-        <div class="exhibit-card-desc">臺史博寶庫即將開啟！收藏著阿公阿嬤時代的桌上遊戲——從清代葫蘆問、日治時代雙六，到戰後大富翁與動物牌，五大主題一次呈現：
-
-🌀 旋轉吧！螺旋人生　✈️ 畫上夢想即刻啟程
-📚 歷史考卷不會考但很好玩　🦁 動物世界大冒險
-🤫 噓！偷偷摸摸玩
-
-現場設有桌遊區，展覽就是遊戲場！</div>
-      </div>
-    </div>
-
-  </div>
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
 <script>
 
@@ -2672,171 +1331,86 @@ function askChip(btn) { sendMessage(btn.textContent); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
 
-// ── Exhibition Drawer ───────────────────────────────
-const EXHIBITS = [
-  {
-    badge: '進行中',
-    title: '轉機：臺灣女子移動紀事特展',
-    date: '2025-12-23 ～ 2026-08-30',
-    location: '展示教育大樓 4樓 第1特展室',
-    banner: 'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg',
-    desc: `以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
+// ── Map ────────────────────────────────────────────
+function openMapDrawer(){document.getElementById('mapDrawer').classList.add('open');document.getElementById('mapOverlay').classList.add('open');}
+function closeMapDrawer(){document.getElementById('mapDrawer').classList.remove('open');document.getElementById('mapOverlay').classList.remove('open');}
+function switchMapTab(btn,panelId){document.querySelectorAll('.map-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.map-panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(panelId).classList.add('active');}
+const mapS={Park:{scale:1,x:0,y:0,dragging:false,lx:0,ly:0},Indoor:{scale:1,x:0,y:0,dragging:false,lx:0,ly:0}};
+function applyMapTransform(n){document.getElementById('zoomInner'+n).style.transform=`translate(${mapS[n].x}px,${mapS[n].y}px) scale(${mapS[n].scale})`;}
+function mapZoom(n,f){mapS[n].scale=Math.min(Math.max(mapS[n].scale*f,1),5);applyMapTransform(n);}
+
+// ── Exhibition ─────────────────────────────────────
+const EXHIBITS=[
+  {badge:'進行中',title:'轉機：臺灣女子移動紀事特展',date:'2025-12-23 ～ 2026-08-30',location:'展示教育大樓 4樓 第1特展室',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg',
+   desc:`以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
 
 展覽以「行前準備」為起點，探討纏足、養女制度與月經禁忌等議題。動線分為「國內線」與「國際線」，穿梭於9個登機門（GATE），走進16位女性人物的生命旅途。
 
-「國內線」：日本時代新式產婆、1949年女性攜老幼重建家園、1970年代鐵道隨車員與藝霞歌舞劇團、工廠女工撐起 Made in Taiwan 經濟奇蹟、女同志的現身與安身、1990年代跨國婚姻社會處境。
+「國內線」：日本時代新式產婆、1949年女性攜老幼重建家園、1970年代鐵道隨車員與藝霞歌舞劇團、工廠女工撐起 Made in Taiwan 經濟奇蹟、1990年代跨國婚姻社會處境。
 
-「國際線」：臺灣第一位環球旅行者張聰明、陳進與林月雲赴日深造、謝雪紅在蘇聯的生命轉折、三毛筆下的撒哈拉……`
-  },
-  {
-    badge: '進行中',
-    title: '地方記憶・遊牧：國家文化記憶庫社群合作成果展',
-    date: '2026-02-10 ～ 2026-05-31',
-    location: '展示教育大樓 1樓 大廳',
-    banner: 'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg',
-    desc: `藉由數位科技與社群共創的力量，國家文化記憶庫得以保存臺灣多元的文化DNA，並以創用CC授權讓文化內容能被自由運用與再創造。
+「國際線」：臺灣第一位環球旅行者張聰明、陳進與林月雲赴日深造、謝雪紅在蘇聯的生命轉折、三毛筆下的撒哈拉……`},
+  {badge:'進行中',title:'地方記憶・遊牧：國家文化記憶庫社群合作成果展',date:'2026-02-10 ～ 2026-05-31',location:'展示教育大樓 1樓 大廳',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg',
+   desc:`藉由數位科技與社群共創的力量，保存臺灣多元的文化DNA，以創用CC授權讓文化內容能被自由運用與再創造。
 
 自2021年起，本館積極推動國家文化記憶庫計畫，足跡遍及城市、小鎮、鄉村與部落，從桃園大溪、彰化溪州、臺東都蘭帶回當地的記憶故事。
 
 四大展區：
-🏫 教案小屋：地方故事進入課堂，學習連結文化與土地
-🎬 光影故事帳：影像紀錄三地截然不同的生命能量
-🎧 聲音角落：戴上耳機，聆聽市場、街巷、風聲與鳥鳴
-✍️ 下一段記憶遊牧：寫下你的文化記憶，共同創造展覽`
-  },
-  {
-    badge: '即將結束',
-    title: '開箱吧！臺史博館藏桌遊特展',
-    date: '2025-06-03 ～ 2026-04-26',
-    location: '展示教育大樓 4樓 第3特展室',
-    banner: 'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg',
-    desc: `臺史博寶庫開啟！收藏著阿公阿嬤時代的桌上遊戲，這些遊戲就像時光機，帶我們回到過去，捕捉各個時代的樣貌與人們的思維觀點。
+🏫 教案小屋：地方故事進入課堂
+🎬 光影故事帳：影像紀錄三地生命能量
+🎧 聲音角落：戴上耳機聆聽市場、街巷、風聲與鳥鳴
+✍️ 下一段記憶遊牧：寫下你的文化記憶`},
+  {badge:'即將結束',title:'開箱吧！臺史博館藏桌遊特展',date:'2025-06-03 ～ 2026-04-26',location:'展示教育大樓 4樓 第3特展室',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg',
+   desc:`臺史博寶庫開啟！收藏著阿公阿嬤時代的桌上遊戲，從清代葫蘆問、日治時代雙六，到戰後大富翁。
 
 五大主題：
-🌀 旋轉吧！螺旋人生：清代葫蘆問、日治時代雙六遊戲
-✈️ 畫上夢想即刻啟程：環遊世界桌遊、大富翁與幸福人生
-📚 歷史考卷不會考但很好玩：升官圖、反攻勝利棋
-🦁 動物世界大冒險：虎棋、鬥獸棋、老鼠牌
-🤫 噓！偷偷摸摸玩：十八骰仔、四色牌、麻將
+🌀 旋轉吧！螺旋人生
+✈️ 畫上夢想即刻啟程
+📚 歷史考卷不會考但很好玩
+🦁 動物世界大冒險
+🤫 噓！偷偷摸摸玩
 
-現場設有桌遊體驗區，展覽就是遊戲場！`
-  }
+現場設有桌遊體驗區，展覽就是遊戲場！`}
 ];
-
-function openExhibitDrawer() {
-  document.getElementById('exhibitDrawer').classList.add('open');
-  document.getElementById('exhibitOverlay').classList.add('open');
-}
-function closeExhibitDrawer() {
-  const d = document.getElementById('exhibitDrawer');
-  d.classList.remove('open', 'expanded');
-  document.getElementById('exhibitOverlay').classList.remove('open');
-}
-function handleExhibitHandleTap() {
-  const d = document.getElementById('exhibitDrawer');
-  if (d.classList.contains('expanded')) closeExhibitDetail();
-  else closeExhibitDrawer();
-}
-function openExhibitDetail(idx) {
-  const ex = EXHIBITS[idx];
-  const scroll = document.getElementById('exhibitDetailScroll');
-  scroll.innerHTML = `
-    <img class="exhibit-detail-banner" src="${ex.banner}" alt="${ex.title}">
-    <div class="exhibit-detail-badge">${ex.badge}</div>
-    <div class="exhibit-detail-title">${ex.title}</div>
-    <div class="exhibit-detail-meta">🗓 ${ex.date}<br>📍 ${ex.location}</div>
-    <div class="exhibit-detail-desc">${ex.desc}</div>
-  `;
-  scroll.scrollTop = 0;
+function openExhibitDrawer(){document.getElementById('exhibitDrawer').classList.add('open');document.getElementById('exhibitOverlay').classList.add('open');}
+function closeExhibitDrawer(){const d=document.getElementById('exhibitDrawer');d.classList.remove('open','expanded');document.getElementById('exhibitOverlay').classList.remove('open');}
+function handleExhibitHandleTap(){const d=document.getElementById('exhibitDrawer');if(d.classList.contains('expanded'))closeExhibitDetail();else closeExhibitDrawer();}
+function openExhibitDetail(idx){
+  const ex=EXHIBITS[idx];
+  document.getElementById('exhibitDetailScroll').innerHTML=`<img class="exhibit-detail-banner" src="${ex.banner}" alt="${ex.title}"><div class="exhibit-detail-badge">${ex.badge}</div><div class="exhibit-detail-title">${ex.title}</div><div class="exhibit-detail-meta">🗓 ${ex.date}<br>📍 ${ex.location}</div><div class="exhibit-detail-desc">${ex.desc}</div>`;
+  document.getElementById('exhibitDetailScroll').scrollTop=0;
   document.getElementById('exhibitDrawer').classList.add('expanded');
 }
-function closeExhibitDetail() {
-  document.getElementById('exhibitDrawer').classList.remove('expanded');
-}
-window.addEventListener('DOMContentLoaded', () => {
-  const ed = document.getElementById('exhibitDrawer');
-  let ety = 0;
-  ed.addEventListener('touchstart', e => { ety = e.touches[0].clientY; }, {passive:true});
-  ed.addEventListener('touchend', e => {
-    if (e.changedTouches[0].clientY - ety > 80) {
-      if (ed.classList.contains('expanded')) closeExhibitDetail();
-      else closeExhibitDrawer();
-    }
-  }, {passive:true});
-});
+function closeExhibitDetail(){document.getElementById('exhibitDrawer').classList.remove('expanded');}
 
-// ── Map Drawer Functions ────────────────────────────
-function openMapDrawer() {
-  document.getElementById('mapDrawer').classList.add('open');
-  document.getElementById('mapOverlay').classList.add('open');
-}
-function closeMapDrawer() {
-  document.getElementById('mapDrawer').classList.remove('open');
-  document.getElementById('mapOverlay').classList.remove('open');
-}
-function switchMapTab(btn, panelId) {
-  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById(panelId).classList.add('active');
-}
-
-const mapS = {
-  Park:   { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 },
-  Indoor: { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 }
-};
-function applyMapTransform(n) {
-  document.getElementById('zoomInner'+n).style.transform =
-    `translate(${mapS[n].x}px,${mapS[n].y}px) scale(${mapS[n].scale})`;
-}
-function mapZoom(n, f) {
-  mapS[n].scale = Math.min(Math.max(mapS[n].scale * f, 1), 5);
-  applyMapTransform(n);
-}
-
-window.addEventListener('DOMContentLoaded', () => {
-  ['Park','Indoor'].forEach(n => {
-    const w = document.getElementById('zoomWrap'+n);
-    const s = mapS[n];
-    w.addEventListener('mousedown', e => { s.dragging=true; s.lx=e.clientX; s.ly=e.clientY; });
-    window.addEventListener('mousemove', e => {
-      if (!s.dragging) return;
-      s.x+=e.clientX-s.lx; s.y+=e.clientY-s.ly;
-      s.lx=e.clientX; s.ly=e.clientY; applyMapTransform(n);
-    });
-    window.addEventListener('mouseup', () => s.dragging=false);
-    w.addEventListener('touchstart', e => {
-      if(e.touches.length===1){s.dragging=true;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;}
-    },{passive:true});
-    w.addEventListener('touchmove', e => {
-      if(s.dragging&&e.touches.length===1){
-        s.x+=e.touches[0].clientX-s.lx; s.y+=e.touches[0].clientY-s.ly;
-        s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; applyMapTransform(n);
-      }
-    },{passive:true});
-    w.addEventListener('touchend', ()=>s.dragging=false,{passive:true});
-    let ld=0;
-    w.addEventListener('touchstart', e=>{
-      if(e.touches.length===2) ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-    },{passive:true});
-    w.addEventListener('touchmove', e=>{
-      if(e.touches.length===2){
-        const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
-        if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}
-        ld=d;
-      }
-    },{passive:true});
-  });
-
-  const md = document.getElementById('mapDrawer');
-  let mty=0;
-  md.addEventListener('touchstart', e=>{mty=e.touches[0].clientY;},{passive:true});
-  md.addEventListener('touchend', e=>{if(e.changedTouches[0].clientY-mty>60)closeMapDrawer();},{passive:true});
-});
+// ── Wire up bottom buttons ──────────────────────────
+function showComingSoon(name){const l=document.getElementById('voiceLabel');l.textContent=name+' 即將推出';l.style.opacity='1';setTimeout(()=>{l.textContent='';l.style.opacity='0';},2000);}
 
 // Init
-window.addEventListener('DOMContentLoaded', initOrb);
-</script>
+window.addEventListener('DOMContentLoaded', function(){
+  initOrb();
+  // Map touch
+  ['Park','Indoor'].forEach(n=>{
+    const w=document.getElementById('zoomWrap'+n);const s=mapS[n];
+    w.addEventListener('mousedown',e=>{s.dragging=true;s.lx=e.clientX;s.ly=e.clientY;});
+    window.addEventListener('mousemove',e=>{if(!s.dragging)return;s.x+=e.clientX-s.lx;s.y+=e.clientY-s.ly;s.lx=e.clientX;s.ly=e.clientY;applyMapTransform(n);});
+    window.addEventListener('mouseup',()=>s.dragging=false);
+    w.addEventListener('touchstart',e=>{if(e.touches.length===1){s.dragging=true;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;}},{passive:true});
+    w.addEventListener('touchmove',e=>{if(s.dragging&&e.touches.length===1){s.x+=e.touches[0].clientX-s.lx;s.y+=e.touches[0].clientY-s.ly;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;applyMapTransform(n);}},{passive:true});
+    w.addEventListener('touchend',()=>s.dragging=false,{passive:true});
+    let ld=0;
+    w.addEventListener('touchstart',e=>{if(e.touches.length===2)ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+    w.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}ld=d;}},{passive:true});
+  });
+  // Map swipe close
+  const md=document.getElementById('mapDrawer');let mty=0;
+  md.addEventListener('touchstart',e=>{mty=e.touches[0].clientY;},{passive:true});
+  md.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-mty>80)closeMapDrawer();},{passive:true});
+  // Exhibit swipe
+  const ed=document.getElementById('exhibitDrawer');let ety=0;
+  ed.addEventListener('touchstart',e=>{ety=e.touches[0].clientY;},{passive:true});
+  ed.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-ety>80){if(ed.classList.contains('expanded'))closeExhibitDetail();else closeExhibitDrawer();}},{passive:true});
+});
 
+</script>
 </body>
 </html>
