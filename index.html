@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>臺史博 AI 助理 V11 - 穩定語音版</title>
+<title>臺史博 AI 助理</title>
 <style>
-/* 這裡保留你原始的 CSS 樣式，不做變動以維持視覺一致性 */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400&display=swap');
 
 :root {
@@ -26,122 +25,597 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; height: 100dvh; background: #020510; color: var(--text); font-family: 'Noto Sans TC', sans-serif; font-weight: 300; overflow: hidden; user-select: none; }
-#threeCanvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; cursor: pointer; pointer-events: all; background: transparent; }
-.app { position: relative; z-index: 3; height: 100%; height: 100dvh; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
-.app > * { pointer-events: all; }
-.header { width: 100%; padding: 18px 24px 0; display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.header-logo { display: flex; align-items: center; justify-content: center; width: 100%; }
-.status-pill { display: flex; align-items: center; gap: 5px; background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); border-radius: 20px; padding: 4px 10px; font-size: 10px; color: rgba(0,255,200,0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
-.status-dot { width: 5px; height: 5px; border-radius: 50%; background: #00ffcc; box-shadow: 0 0 8px rgba(0,255,200,0.9); animation: sPulse 2.5s ease-in-out infinite; }
-@keyframes sPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.greeting { margin-top: 52px; text-align: center; pointer-events: none; }
-.greeting h2 { font-family: 'Noto Serif TC', serif; font-size: 26px; font-weight: 600; letter-spacing: 0.04em; color: rgba(255,255,255,0.92); text-shadow: 0 0 30px rgba(0,255,200,0.4); }
-.greeting p { font-size: 11px; color: rgba(200,240,255,0.6); margin-top: 10px; letter-spacing: 0.05em; text-shadow: 0 0 15px rgba(0,255,200,0.2); }
-.orb-spacer { flex: 1; pointer-events: none; }
-.voice-label { font-size: 12px; color: var(--text-dim); letter-spacing: 0.08em; height: 20px; transition: opacity 0.3s; text-align: center; pointer-events: none; }
-.bottom-bar { width: 100%; padding: 14px 24px 20px; display: flex; align-items: center; justify-content: center; }
-.tab-bar { display: flex; align-items: center; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); border-radius: 28px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); overflow: hidden; }
-.tab-icon-btn { display: flex; flex-direction: column; align-items: center; gap: 5px; background: none; border: none; cursor: pointer; padding: 10px 24px; transition: background 0.2s; position: relative; flex: 1; }
-.tab-icon-btn + .tab-icon-btn { border-left: 1px solid rgba(255,255,255,0.15); }
-.tab-icon-btn span { font-size: 9px; color: #ffffff; letter-spacing: 0.05em; display: block; }
-.notif-dot { display: none; position: absolute; top: 6px; right: 12px; width: 7px; height: 7px; background: #F48FB1; border-radius: 50%; box-shadow: 0 0 6px rgba(244,143,177,0.7); }
-.tab-icon-btn.has-messages .notif-dot { display: block; }
 
-/* Drawer & Chat Styles */
-.drawer-overlay { position: fixed; inset: 0; z-index: 9; background: rgba(0,0,0,0.35); opacity: 0; pointer-events: none; transition: opacity 0.3s; backdrop-filter: blur(3px); }
+html, body {
+  height: 100%; height: 100dvh;
+  background: #020510;
+  color: var(--text);
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── Canvas (Three.js) ───────────────────────────── */
+#threeCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  cursor: pointer;
+  pointer-events: all;
+  background: transparent;
+}
+
+/* ── App overlay ─────────────────────────────────── */
+.app {
+  position: relative; z-index: 3;
+  height: 100%; height: 100dvh;
+  display: flex; flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+.app > * { pointer-events: all; }
+
+/* ── Header ──────────────────────────────────────── */
+.header {
+  width: 100%; padding: 18px 24px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.header-logo { display: flex; align-items: center; justify-content: center; width: 100%; }
+.logo-mark {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif TC', serif;
+  font-size: 13px; color: #fff; font-weight: 600;
+}
+.logo-text { font-size: 13px; color: rgba(42,58,74,0.6); letter-spacing: 0.06em; }
+.status-pill {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(0,255,200,0.08);
+  border: 1px solid rgba(0,255,200,0.2);
+  border-radius: 20px; padding: 4px 10px;
+  font-size: 10px; color: rgba(0,255,200,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.status-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #00ffcc;
+  box-shadow: 0 0 8px rgba(0,255,200,0.9);
+  animation: sPulse 2.5s ease-in-out infinite;
+}
+@keyframes sPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── Greeting ────────────────────────────────────── */
+.greeting {
+  margin-top: 52px;
+  text-align: center;
+  pointer-events: none;
+}
+.greeting h2 {
+  font-family: 'Noto Serif TC', serif;
+  font-size: 26px; font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 0 30px rgba(0,255,200,0.4);
+}
+.greeting p {
+  font-size: 11px; color: rgba(200,240,255,0.6);
+  margin-top: 10px; letter-spacing: 0.05em;
+  text-shadow: 0 0 15px rgba(0,255,200,0.2);
+}
+
+/* ── Center spacer (canvas takes up most of screen) ── */
+.orb-spacer { flex: 1; pointer-events: none; }
+
+/* ── Voice label ─────────────────────────────────── */
+.voice-label {
+  font-size: 12px; color: var(--text-dim);
+  letter-spacing: 0.08em;
+  height: 20px;
+  transition: opacity 0.3s;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ── Bottom bar ──────────────────────────────────── */
+
+
+.bottom-bar {
+  width: 100%; padding: 14px 24px 20px;
+  display: flex; align-items: center; justify-content: center;
+}
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-bar { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+}
+.tab-bar {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+.tab-icon-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: none;
+  cursor: pointer;
+  padding: 10px 24px;
+  transition: background 0.2s;
+  position: relative;
+  flex: 1;
+}
+.tab-icon-btn + .tab-icon-btn {
+  border-left: 1px solid rgba(255,255,255,0.15);
+}
+.tab-icon-btn:active { background: rgba(255,255,255,0.15); }
+.tab-icon-btn svg { width: 20px; height: 20px; }
+.tab-icon-btn span { font-size: 9px; color: #ffffff; letter-spacing: 0.05em; display: block; }
+.chat-tab-btn svg { width: 22px; height: 22px; }
+.chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; color: rgba(200,240,255,0.6); }
+.tab-icon-btn.has-messages .notif-dot {
+  display: block;
+}
+.notif-dot {
+  display: none;
+  position: absolute; top: 6px; right: 12px;
+  width: 7px; height: 7px;
+  background: #F48FB1; border-radius: 50%;
+  box-shadow: 0 0 6px rgba(244,143,177,0.7);
+}
+
+/* ── Drawer ──────────────────────────────────────── */
+.drawer-overlay {
+  position: fixed; inset: 0; z-index: 9;
+  background: rgba(0,0,0,0.35);
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+  backdrop-filter: blur(3px);
+}
 .drawer-overlay.open { opacity: 1; pointer-events: all; }
-.drawer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 64%; background: rgba(2,5,16,0.85); border-top: 1px solid rgba(0,255,200,0.15); border-radius: 22px 22px 0 0; backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); box-shadow: 0 -8px 48px rgba(0,255,200,0.1); display: flex; flex-direction: column; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1); }
+
+.drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  height: 64%;
+  background: rgba(2,5,16,0.85);
+  border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 -8px 48px rgba(0,255,200,0.1);
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+}
 .drawer.open { transform: translateY(0); }
-.drawer-handle { width: 36px; height: 4px; background: rgba(0,255,200,0.2); border-radius: 2px; margin: 12px auto 0; cursor: pointer; flex-shrink: 0; }
-.drawer-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px 6px; flex-shrink: 0; }
-.drawer-title { font-size: 12px; color: rgba(0,255,200,0.6); letter-spacing: 0.06em; display: flex; align-items: center; gap: 6px; }
-.drawer-close-btn { background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); cursor: pointer; width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(0,255,200,0.6); }
-.chip-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 8px; flex-shrink: 0; }
-.chip-btn { background: rgba(0,255,200,0.07); border: 1px solid rgba(0,255,200,0.18); color: rgba(200,240,255,0.65); font-size: 11px; padding: 5px 11px; border-radius: 20px; cursor: pointer; white-space: nowrap; transition: all 0.15s; backdrop-filter: blur(10px); }
-.chat-area { flex: 1; overflow-y: auto; padding: 6px 16px 10px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+
+.drawer-handle {
+  width: 36px; height: 4px;
+  background: rgba(0,255,200,0.2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  cursor: pointer; flex-shrink: 0;
+}
+.drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px 6px; flex-shrink: 0;
+}
+.drawer-title {
+  font-size: 12px; color: rgba(0,255,200,0.6);
+  letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 6px;
+}
+.drawer-title svg { width: 12px; height: 12px; opacity: 0.5; }
+.drawer-close-btn {
+  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); cursor: pointer;
+  width: 26px; height: 26px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(0,255,200,0.6);
+}
+.drawer-close-btn svg { width: 13px; height: 13px; }
+
+.chip-row {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0 16px 8px; flex-shrink: 0;
+}
+.chip-btn {
+  background: rgba(0,255,200,0.07); border: 1px solid rgba(0,255,200,0.18);
+  color: rgba(200,240,255,0.65); font-family: 'Noto Sans TC', sans-serif;
+  font-size: 11px; padding: 5px 11px; border-radius: 20px;
+  cursor: pointer; white-space: nowrap; -webkit-appearance: none;
+  transition: all 0.15s; backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(200,140,200,0.1);
+}
+.chip-btn:active { border-color: rgba(144,224,239,0.5); background: rgba(255,255,255,0.55); }
+
+.chat-area {
+  flex: 1; overflow-y: auto; padding: 6px 16px 10px;
+  display: flex; flex-direction: column; gap: 12px;
+  scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+}
+.chat-area::-webkit-scrollbar { width: 0; }
+
+.chat-empty {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.chat-empty p { font-size: 12px; color: var(--text-dimmer); text-align: center; line-height: 1.9; }
+
 .msg { display: flex; gap: 8px; animation: msgIn 0.22s ease; }
 .msg.user { flex-direction: row-reverse; }
-.avatar { width: 24px; height: 24px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; }
-.avatar.bot img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
-.bubble { max-width: calc(100% - 66px); padding: 9px 12px; font-size: 13px; line-height: 1.8; border-radius: 14px; word-break: break-word; }
-.bubble.bot { background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); color: #f0f8ff; border-top-left-radius: 3px; backdrop-filter: blur(12px); }
-.bubble.user { background: rgba(170,68,255,0.15); border: 1px solid rgba(170,68,255,0.3); color: #f0f8ff; border-top-right-radius: 3px; backdrop-filter: blur(12px); }
-.drawer-input-area { padding: 8px 14px 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
-.drawer-input-wrap { display: flex; gap: 7px; align-items: flex-end; background: rgba(255,255,255,0.06); border: 1px solid rgba(0,255,200,0.2); border-radius: 14px; padding: 8px 11px; backdrop-filter: blur(16px); }
-textarea { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: inherit; font-size: 14px; resize: none; max-height: 80px; }
-.send-btn { width: 32px; height: 32px; background: linear-gradient(135deg, #00ffcc, #00aaff); border: none; border-radius: 9px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+@keyframes msgIn { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:none} }
+
+.avatar {
+  width: 24px; height: 24px; border-radius: 7px;
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 500; margin-top: 2px;
+}
+.avatar.bot {
+  background: #fff;
+  overflow: hidden;
+  padding: 0;
+}
+.avatar.bot img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+.avatar.user { background: var(--surface2); color: var(--text-dim); }
+
+.bubble {
+  max-width: calc(100% - 66px);
+  padding: 9px 12px; font-size: 13px; line-height: 1.8;
+  border-radius: 14px; word-break: break-word;
+}
+.bubble.bot { background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2); color: #f0f8ff; border-top-left-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.bubble.user { background: rgba(170,68,255,0.15); border: 1px solid rgba(170,68,255,0.3); color: #f0f8ff; border-top-right-radius: 3px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.bubble.error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; }
+
+.typing { display: flex; gap: 8px; align-items: flex-end; }
+.typing-dots {
+  background: var(--surface); border: 1px solid var(--border);
+  border-top-left-radius: 3px; border-radius: 14px;
+  padding: 11px 14px; display: flex; gap: 4px; align-items: center;
+}
+.typing-dots span {
+  width: 4px; height: 4px; background: var(--text-dim);
+  border-radius: 50%; animation: tdB 1.2s infinite;
+}
+.typing-dots span:nth-child(2){animation-delay:0.2s}
+.typing-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes tdB{0%,60%,100%{transform:translateY(0);opacity:0.4}30%{transform:translateY(-5px);opacity:1}}
+
+.drawer-input-area {
+  padding: 8px 14px 12px; border-top: 1px solid var(--border); flex-shrink: 0;
+}
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .drawer-input-area { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+.drawer-input-wrap {
+  display: flex; gap: 7px; align-items: flex-end;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(0,255,200,0.2);
+  border-radius: 14px; padding: 8px 11px; transition: all 0.2s;
+  backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 2px 12px rgba(200,140,200,0.1);
+}
+.drawer-input-wrap:focus-within { border-color: rgba(0,255,200,0.4); box-shadow: 0 2px 20px rgba(0,255,200,0.15); }
+textarea {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: 'Noto Sans TC', sans-serif;
+  font-size: 14px; font-weight: 300; resize: none;
+  line-height: 1.6; max-height: 80px; min-height: 22px; padding: 0;
+}
+textarea::placeholder { color: rgba(0,255,200,0.3); }
+.send-btn {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #00ffcc, #00aaff);
+  border: none; border-radius: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; -webkit-appearance: none; transition: opacity 0.2s;
+}
+.send-btn:active { opacity: 0.8; }
+.send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 .send-btn svg { width: 13px; height: 13px; fill: #fff; }
 
-/* Aurora background */
-.aurora-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #020510; }
-.aurora-layer { position: absolute; inset: 0; filter: blur(55px); opacity: 0.82; animation: auroraPulse 14s ease-in-out infinite alternate; }
-.aurora-band { position: absolute; width: 200%; left: -50%; border-radius: 50%; transform-origin: center center; }
-.ab1 { height: 80vh; top: -20vh; background: conic-gradient(from var(--a1) at 40% 60%, transparent 0%, rgba(0,255,200,0.5) 12%, rgba(0,170,255,0.4) 28%, transparent 42%, rgba(170,68,255,0.3) 58%, transparent 72%); animation: ab1spin 20s linear infinite; }
-@keyframes ab1spin { to { --a1: 360deg } }
-.museum-name { font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.85); letter-spacing: 0.14em; font-family: 'Noto Serif TC', serif; }
+/* ── Tablet / Desktop ────────────────────────────── */
+@media (min-width: 600px) {
+  .greeting h2 { font-size: 24px; }
+  .drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
+  .drawer.open { transform: translateX(-50%) translateY(0); }
+  .drawer-overlay { display: none; }
+}
 
-/* Map & Exhibit Drawers (省略樣式細節以節省空間，功能保留) */
-.map-drawer, .exhibit-drawer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1); visibility: hidden; background: rgba(2,5,16,0.96); border-radius: 22px 22px 0 0; }
-.map-drawer.open, .exhibit-drawer.open { transform: translateY(0); visibility: visible; }
-.map-overlay, .exhibit-overlay { position: fixed; inset: 0; z-index: 9; background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+
+/* ── Aurora background ───────────────────────────── */
+@property --a1{syntax:'<angle>';initial-value:0deg;inherits:false}
+@property --a2{syntax:'<angle>';initial-value:60deg;inherits:false}
+@property --a3{syntax:'<angle>';initial-value:120deg;inherits:false}
+
+.aurora-bg {
+  position: fixed; inset: 0; z-index: 0;
+  overflow: hidden;
+  background: #020510;
+}
+
+.aurora-layer {
+  position: absolute; inset: 0;
+  filter: blur(55px);
+  opacity: 0.82;
+  animation: auroraPulse 14s ease-in-out infinite alternate;
+}
+@keyframes auroraPulse {
+  0%   { opacity: 0.7;  filter: blur(55px); }
+  50%  { opacity: 0.92; filter: blur(45px); }
+  100% { opacity: 0.72; filter: blur(65px); }
+}
+
+.aurora-band {
+  position: absolute;
+  width: 200%; left: -50%;
+  border-radius: 50%;
+  transform-origin: center center;
+}
+
+.ab1 {
+  height: 80vh; top: -20vh;
+  background: conic-gradient(from var(--a1) at 40% 60%,
+    transparent 0%,
+    rgba(0,255,200,0.5)  12%,
+    rgba(0,170,255,0.4)  28%,
+    transparent 42%,
+    rgba(170,68,255,0.3) 58%,
+    transparent 72%
+  );
+  animation: ab1spin 20s linear infinite;
+}
+@keyframes ab1spin { to { --a1: 360deg } }
+
+.ab2 {
+  height: 85vh; top: 0vh;
+  background: conic-gradient(from var(--a2) at 62% 38%,
+    transparent 0%,
+    rgba(255,102,170,0.4) 10%,
+    rgba(0,255,200,0.3)   26%,
+    transparent 40%,
+    rgba(0,170,255,0.5)   54%,
+    transparent 68%
+  );
+  animation: ab2spin 28s linear infinite reverse;
+}
+@keyframes ab2spin { to { --a2: 420deg } }
+
+.ab3 {
+  height: 70vh; top: -5vh;
+  background: conic-gradient(from var(--a3) at 28% 72%,
+    transparent 0%,
+    rgba(68,255,170,0.4)  18%,
+    transparent 32%,
+    rgba(255,102,170,0.3) 48%,
+    rgba(170,68,255,0.4)  62%,
+    transparent 78%
+  );
+  animation: ab3spin 22s linear infinite;
+}
+@keyframes ab3spin { to { --a3: 480deg } }
+
+.museum-name {
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.14em;
+  font-family: 'Noto Serif TC', serif;
+}
+
+/* ── Map Drawer ──────────────────────────────────── */
+.map-drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 80%;
+  background: rgba(2,5,16,0.96); border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0; box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
+  display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+  visibility: hidden;
+}
+.map-drawer.open { transform: translateY(0); visibility: visible; }
+.map-overlay, .exhibit-overlay {
+  position: fixed; inset: 0; z-index: 9;
+  background: rgba(0,0,0,0.4); opacity: 0; pointer-events: none;
+  transition: opacity 0.3s;
+}
 .map-overlay.open, .exhibit-overlay.open { opacity: 1; pointer-events: all; }
+.map-handle, .exhibit-handle {
+  width: 36px; height: 4px; background: rgba(0,255,200,0.2);
+  border-radius: 2px; margin: 12px auto 0; flex-shrink: 0; cursor: pointer;
+}
+.map-header, .exhibit-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px 0; flex-shrink: 0;
+}
+.map-header-title, .exhibit-header-title { font-size: 13px; color: rgba(0,255,200,0.8); letter-spacing: 0.06em; }
+.map-close-btn, .exhibit-close-btn {
+  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
+  cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; color: rgba(0,255,200,0.6);
+}
+.map-close-btn svg, .exhibit-close-btn svg { width: 14px; height: 14px; }
+.map-tabs {
+  display: flex; margin: 12px 20px 0;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; overflow: hidden; flex-shrink: 0;
+}
+.map-tab {
+  flex: 1; padding: 9px 0; background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 12px;
+  color: rgba(255,255,255,0.45); transition: all 0.2s; letter-spacing: 0.05em;
+}
+.map-tab.active { background: rgba(0,255,200,0.15); color: rgba(0,255,200,0.9); }
+.map-tab + .map-tab { border-left: 1px solid rgba(255,255,255,0.1); }
+.map-body { flex: 1; overflow: hidden; margin: 12px 16px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.08); position: relative; }
+.map-panel { display: none; width: 100%; height: 100%; position: relative; }
+.map-panel.active { display: block; }
+.map-zoom-wrap { width: 100%; height: 100%; overflow: hidden; position: relative; cursor: grab; background: #000; }
+.map-zoom-wrap:active { cursor: grabbing; }
+.map-zoom-inner { width: 100%; height: 100%; transform-origin: 0 0; will-change: transform; }
+.map-zoom-inner img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; }
+.map-zoom-btns { position: absolute; bottom: 14px; right: 14px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
+.map-zoom-btn { width: 36px; height: 36px; background: rgba(2,5,16,0.85); border: 1px solid rgba(0,255,200,0.25); border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: rgba(0,255,200,0.85); font-size: 20px; }
+
+/* ── Exhibition Drawer ───────────────────────────── */
+.exhibit-drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; height: 35%;
+  background: rgba(2,5,16,0.96); border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0; box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
+  display: flex; flex-direction: column;
+  transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.32,0.72,0,1), height 0.4s cubic-bezier(0.32,0.72,0,1);
+  visibility: hidden;
+}
+.exhibit-drawer.open { transform: translateY(0); visibility: visible; }
+.exhibit-drawer.expanded { height: 85%; }
+.exhibit-strip { flex: 1; overflow: hidden; padding: 10px 16px 14px; display: flex; }
+.exhibit-scroll { display: flex; gap: 12px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; align-items: stretch; width: 100%; }
+.exhibit-scroll::-webkit-scrollbar { display: none; }
+.exhibit-card { scroll-snap-align: start; flex: 0 0 75vw; max-width: 300px; border-radius: 14px; overflow: hidden; cursor: pointer; position: relative; border: 1px solid rgba(0,255,200,0.12); display: flex; flex-direction: column; }
+.exhibit-card:active { border-color: rgba(0,255,200,0.35); }
+.exhibit-card-img-wrap { position: relative; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
+.exhibit-card-banner { width: 100%; height: 100%; object-fit: cover; display: block; }
+.exhibit-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(2,5,16,0.92) 0%, rgba(2,5,16,0.4) 45%, transparent 70%); }
+.exhibit-card-name { position: absolute; bottom: 8px; left: 12px; right: 12px; font-size: 13px; font-weight: 400; color: #fff; line-height: 1.4; font-family: 'Noto Serif TC', serif; text-shadow: 0 1px 4px rgba(0,0,0,0.5); }
+.exhibit-card-footer { padding: 8px 12px; background: rgba(2,5,16,0.96); flex-shrink: 0; }
+.exhibit-card-meta { font-size: 10px; color: rgba(200,240,255,0.5); line-height: 1.6; }
+.exhibit-card-btn { display: flex; align-items: center; gap: 4px; margin-top: 5px; font-size: 10px; color: rgba(0,255,200,0.7); letter-spacing: 0.05em; background: none; border: none; padding: 0; cursor: pointer; }
+.exhibit-card-btn svg { width: 11px; height: 11px; }
+.exhibit-detail { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+.exhibit-drawer.expanded .exhibit-strip { display: none; }
+.exhibit-drawer.expanded .exhibit-detail { display: flex; }
+.exhibit-detail-back { display: flex; align-items: center; gap: 6px; padding: 8px 20px 0; flex-shrink: 0; font-size: 12px; color: rgba(0,255,200,0.7); cursor: pointer; background: none; border: none; letter-spacing: 0.05em; }
+.exhibit-detail-back svg { width: 14px; height: 14px; }
+.exhibit-detail-scroll { flex: 1; overflow-y: auto; padding: 12px 20px 24px; -webkit-overflow-scrolling: touch; }
+.exhibit-detail-scroll::-webkit-scrollbar { width: 0; }
+.exhibit-detail-banner { width: 100%; height: 180px; object-fit: cover; border-radius: 12px; margin-bottom: 14px; }
+.exhibit-detail-badge { display: inline-block; font-size: 9px; background: rgba(0,255,200,0.12); border: 1px solid rgba(0,255,200,0.25); color: rgba(0,255,200,0.8); padding: 2px 8px; border-radius: 20px; letter-spacing: 0.08em; margin-bottom: 8px; }
+.exhibit-detail-title { font-size: 17px; font-weight: 600; color: rgba(255,255,255,0.92); font-family: 'Noto Serif TC', serif; line-height: 1.4; margin-bottom: 10px; }
+.exhibit-detail-meta { font-size: 12px; color: rgba(200,240,255,0.55); line-height: 2; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 14px; }
+.exhibit-detail-desc { font-size: 13px; color: rgba(200,240,255,0.7); line-height: 1.9; white-space: pre-line; }
+
+@media (min-width: 600px) {
+  .map-drawer, .exhibit-drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
+  .map-drawer.open { transform: translateX(-50%) translateY(0); }
+  .exhibit-drawer.open { transform: translateX(-50%) translateY(0); }
+  .exhibit-drawer.expanded { transform: translateX(-50%) translateY(0); }
+  .map-overlay, .exhibit-overlay { display: none; }
+}
+
 </style>
 </head>
 <body>
 
+<!-- Aurora background -->
 <div class="aurora-bg">
   <div class="aurora-layer">
     <div class="aurora-band ab1"></div>
+    <div class="aurora-band ab2"></div>
+    <div class="aurora-band ab3"></div>
   </div>
 </div>
 
+<!-- Orb glow ring -->
+<div class="orb-glow-ring" id="orbGlowRing"></div>
+
+<!-- Dot grid -->
 <canvas id="dotCanvas" style="position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"></canvas>
+
+<!-- Three.js canvas -->
 <canvas id="threeCanvas"></canvas>
 
 <div class="app">
   <div class="header">
-    <div class="header-logo"><span class="museum-name">國立臺灣歷史博物館</span></div>
-    <div class="status-pill"><div class="status-dot"></div><span>線上服務中</span></div>
+    <div class="header-logo">
+      <span class="museum-name">國立臺灣歷史博物館</span>
+    </div>
+    <div class="status-pill">
+      <div class="status-dot"></div>
+      <span>線上服務中</span>
+    </div>
   </div>
+
   <div class="greeting">
     <h2 id="greetingText">Gotour AI 智慧小助手</h2>
-    <p id="greetingSubtext">可以跟我對話，或點按鈕詢問喔</p>
+    <p id="greetingSubtext">可以跟我對話，或是往上滑也可以用打字的喔</p>
   </div>
+
   <div class="orb-spacer"></div>
+
   <div class="voice-label" id="voiceLabel"></div>
+
   <div class="bottom-bar">
     <div class="tab-bar">
-      <button class="tab-icon-btn" onclick="openDrawer()">
-        <div class="notif-dot"></div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        <span>對話記錄</span>
-      </button>
-      <button class="tab-icon-btn" onclick="openExhibitDrawer()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        <span>展覽列表</span>
-      </button>
-      <button class="tab-icon-btn" onclick="openMapDrawer()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
-        <span>園區地圖</span>
-      </button>
+    <button class="tab-icon-btn" id="chatTabBtn" onclick="openDrawer()">
+      <div class="notif-dot"></div>
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span>對話記錄</span>
+    </button>
+    <button class="tab-icon-btn" onclick="openExhibitDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>展覽列表</span>
+    </button>
+    <button class="tab-icon-btn" onclick="openMapDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+        <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+      </svg>
+      <span>園區地圖</span>
+    </button>
     </div>
   </div>
 </div>
 
+<!-- Drawer overlay -->
 <div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- Drawer -->
 <div class="drawer" id="drawer">
   <div class="drawer-handle" onclick="closeDrawer()"></div>
-  <div class="drawer-header"><div class="drawer-title">對話記錄</div></div>
+  <div class="drawer-header">
+    <div class="drawer-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      對話記錄
+    </div>
+    <button class="drawer-close-btn" onclick="closeDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
   <div class="chip-row" id="chipRow">
     <button class="chip-btn" onclick="askChip(this)">幾點開館？</button>
     <button class="chip-btn" onclick="askChip(this)">票價多少？</button>
     <button class="chip-btn" onclick="askChip(this)">現在有哪些特展？</button>
+    <button class="chip-btn" onclick="askChip(this)">怎麼搭公車來？</button>
+    <button class="chip-btn" onclick="askChip(this)">可以帶寵物嗎？</button>
+    <button class="chip-btn" onclick="askChip(this)">停車多少錢？</button>
   </div>
-  <div class="chat-area" id="chatArea"></div>
+
+  <div class="chat-area" id="chatArea">
+    <div class="chat-empty" id="chatEmpty">
+      <p>點球球說話<br>或在下方輸入問題</p>
+    </div>
+  </div>
+
   <div class="drawer-input-area">
     <div class="drawer-input-wrap">
-      <textarea id="userInput" placeholder="輸入問題…" rows="1" oninput="autoResize(this)"></textarea>
+      <textarea id="userInput" placeholder="輸入問題…" rows="1"
+        onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
       <button class="send-btn" id="sendBtn" onclick="sendMessage()">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
       </button>
@@ -149,18 +623,485 @@ textarea { flex: 1; background: transparent; border: none; outline: none; color:
   </div>
 </div>
 
+<!-- Three.js -->
+
+<!-- Map overlay -->
 <div class="map-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
-<div class="map-drawer" id="mapDrawer">...</div>
+<!-- Map Drawer -->
+<div class="map-drawer" id="mapDrawer">
+  <div class="map-handle" onclick="closeMapDrawer()"></div>
+  <div class="map-header">
+    <span class="map-header-title">園區地圖</span>
+    <button class="map-close-btn" onclick="closeMapDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="map-tabs">
+    <button class="map-tab active" onclick="switchMapTab(this,'mapPark')">臺灣歷史公園</button>
+    <button class="map-tab" onclick="switchMapTab(this,'mapIndoor')">室內地圖</button>
+  </div>
+  <div class="map-body">
+    <div class="map-panel active" id="mapPark">
+      <div class="map-zoom-wrap" id="zoomWrapPark"><div class="map-zoom-inner" id="zoomInnerPark"><img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false"></div></div>
+      <div class="map-zoom-btns"><button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button><button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button></div>
+    </div>
+    <div class="map-panel" id="mapIndoor">
+      <div class="map-zoom-wrap" id="zoomWrapIndoor"><div class="map-zoom-inner" id="zoomInnerIndoor"><img src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/maps/indoor-map.jpg" alt="室內地圖" draggable="false"></div></div>
+      <div class="map-zoom-btns"><button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button><button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- Exhibition overlay -->
 <div class="exhibit-overlay" id="exhibitOverlay" onclick="closeExhibitDrawer()"></div>
-<div class="exhibit-drawer" id="exhibitDrawer">...</div>
+<!-- Exhibition Drawer -->
+<div class="exhibit-drawer" id="exhibitDrawer">
+  <div class="exhibit-handle" onclick="handleExhibitHandleTap()"></div>
+  <div class="exhibit-header">
+    <span class="exhibit-header-title">特展列表</span>
+    <button class="exhibit-close-btn" onclick="closeExhibitDrawer()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="exhibit-strip">
+    <div class="exhibit-scroll">
+      <div class="exhibit-card" onclick="openExhibitDetail(0)">
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg" alt="轉機特展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">轉機：臺灣女子移動紀事特展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2025-12-23 ～ 2026-08-30<br>📍 4樓 第1特展室</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
+      </div>
+      <div class="exhibit-card" onclick="openExhibitDetail(1)">
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg" alt="地方記憶展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">地方記憶・遊牧：國家文化記憶庫社群合作成果展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2026-02-10 ～ 2026-05-31<br>📍 1樓 大廳</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
+      </div>
+      <div class="exhibit-card" onclick="openExhibitDetail(2)">
+        <div class="exhibit-card-img-wrap"><img class="exhibit-card-banner" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg" alt="桌遊特展"><div class="exhibit-card-img-overlay"></div><div class="exhibit-card-name">開箱吧！臺史博館藏桌遊特展</div></div>
+        <div class="exhibit-card-footer"><div class="exhibit-card-meta">🗓 2025-06-03 ～ 2026-04-26<br>📍 4樓 第3特展室</div><button class="exhibit-card-btn">展開說明 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></div>
+      </div>
+    </div>
+  </div>
+  <div class="exhibit-detail" id="exhibitDetail">
+    <button class="exhibit-detail-back" onclick="closeExhibitDetail()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回列表</button>
+    <div class="exhibit-detail-scroll" id="exhibitDetailScroll"></div>
+  </div>
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
 <script>
+
 // ═══════════════════════════════════════════════════
-// 核心音訊系統 (解決手機版靜音問題)
+// INTERACTIVE DOT GRID
 // ═══════════════════════════════════════════════════
+(function() {
+  const dc = document.getElementById('dotCanvas');
+  const ctx = dc.getContext('2d');
+  const DOT_SPACING = 20;
+  const DOT_R = 0.7;
+  const INFLUENCE = 80;
+  const WHITE = [255, 255, 255];
+  let mouse = { x: -999, y: -999 };
+  let dots = [];
+  let W, H;
+
+  function resize() {
+    W = dc.width = window.innerWidth;
+    H = dc.height = window.innerHeight;
+    dots = [];
+    for (let x = DOT_SPACING; x < W; x += DOT_SPACING) {
+      for (let y = DOT_SPACING; y < H; y += DOT_SPACING) {
+        dots.push({ x, y, r: DOT_R, alpha: 0, targetAlpha: 0 });
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const now = Date.now() * 0.001;
+
+    dots.forEach((d, i) => {
+      const dx = d.x - mouse.x;
+      const dy = d.y - mouse.y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+
+      if (dist < INFLUENCE) {
+        const t = 1 - dist / INFLUENCE;
+        d.targetAlpha = t * 0.55;
+  
+      } else {
+        // Subtle idle twinkle
+        d.targetAlpha = (Math.sin(now * 0.6 + d.x * 0.04 + d.y * 0.03) * 0.5 + 0.5) * 0.05;
+  
+      }
+
+      // Smooth interpolation
+      d.alpha += (d.targetAlpha - d.alpha) * 0.12;
+
+
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+
+      ctx.fillStyle = `rgba(255,255,255,${d.alpha})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('touchmove', e => {
+    if (e.touches[0]) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+  }, { passive: true });
+  window.addEventListener('touchend', () => { mouse.x = -999; mouse.y = -999; });
+
+  resize();
+  draw();
+})();
+
+// ═══════════════════════════════════════════════════
+// THREE.JS ORB  (from aguscruiz/voiceorb, adapted)
+// ═══════════════════════════════════════════════════
+let scene, camera, renderer, orbLayers = [];
+let currentOrbState = 'idle';
+let targetScale = 1.0, currentScale = 1.0;
+let speakingCadence = { time:0, intensity:0, nextChange:0 };
+
+const orbStates = {
+  idle: {
+    layers: [
+      { color:0x00ffcc, opacity:0.45, scale:1.0,  rotationSpeed:{x:0.0002,y:0.0012,z:0.0001} },
+      { color:0x00aaff, opacity:0.45, scale:0.85, rotationSpeed:{x:-0.0011,y:0.0003,z:0.0009} },
+      { color:0xaa44ff, opacity:0.65, scale:0.70, rotationSpeed:{x:0.0007,y:-0.0002,z:-0.0014} }
+    ],
+    audioLevel:0.15, timeSpeed:0.012, pulsate:true, pulsateMode:'breathing', pulsateMin:-0.03, pulsateMax:0.03, chromaticAberration:1.8
+  },
+  listening: {
+    layers: [
+      { color:0x00ffcc, opacity:0.55, scale:1.0,  rotationSpeed:{x:0.002,y:0.004,z:0} },
+      { color:0x44ffaa, opacity:0.55, scale:0.85, rotationSpeed:{x:-0.003,y:0.005,z:0.002} },
+      { color:0x00ddff, opacity:0.75, scale:0.70, rotationSpeed:{x:0.004,y:-0.003,z:-0.001} }
+    ],
+    audioLevel:0.6, timeSpeed:0.022, pulsate:true, pulsateMode:'audio-reactive',
+    pulsateMin:0.02, pulsateMax:0.28, chromaticAberration:2.2
+  },
+  thinking: {
+    layers: [
+      { color:0xaa44ff, opacity:0.5, scale:0.85, rotationSpeed:{x:0.003,y:0.003,z:0} },
+      { color:0x8833ee, opacity:0.5, scale:0.72, rotationSpeed:{x:-0.004,y:0.004,z:0.002} },
+      { color:0xcc66ff, opacity:0.7, scale:0.60, rotationSpeed:{x:0.005,y:-0.004,z:-0.002} }
+    ],
+    audioLevel:0.45, timeSpeed:0.02, pulsate:true, pulsateMode:'thinking',
+    pulsateMin:0.0, pulsateMax:0.15, chromaticAberration:1.5
+  },
+  speaking: {
+    layers: [
+      { color:0xff66aa, opacity:0.55, scale:1.0,  rotationSpeed:{x:0.004,y:0.005,z:0} },
+      { color:0xff44aa, opacity:0.55, scale:0.85, rotationSpeed:{x:-0.005,y:0.006,z:0.003} },
+      { color:0xff88cc, opacity:0.72, scale:0.70, rotationSpeed:{x:0.006,y:-0.005,z:-0.002} }
+    ],
+    audioLevel:0.8, timeSpeed:0.027, pulsate:true, pulsateMode:'cadence',
+    pulsateMin:0.05, pulsateMax:0.25, chromaticAberration:2.8
+  }
+};
+
+const vertexShader = `
+  varying vec3 vNormal; varying vec3 vPosition; varying vec2 vUv;
+  uniform float time; uniform float audioLevel; uniform float layerOffset;
+  vec3 mod289(vec3 x){return x-floor(x*(1./289.))*289.;}
+  vec4 mod289(vec4 x){return x-floor(x*(1./289.))*289.;}
+  vec4 permute(vec4 x){return mod289(((x*34.)+1.)*x);}
+  vec4 taylorInvSqrt(vec4 r){return 1.79284291400159-0.85373472095314*r;}
+  float snoise(vec3 v){
+    const vec2 C=vec2(1./6.,1./3.);const vec4 D=vec4(0.,.5,1.,2.);
+    vec3 i=floor(v+dot(v,C.yyy));vec3 x0=v-i+dot(i,C.xxx);
+    vec3 g=step(x0.yzx,x0.xyz);vec3 l=1.-g;
+    vec3 i1=min(g.xyz,l.zxy);vec3 i2=max(g.xyz,l.zxy);
+    vec3 x1=x0-i1+C.xxx;vec3 x2=x0-i2+C.yyy;vec3 x3=x0-D.yyy;
+    i=mod289(i);
+    vec4 p=permute(permute(permute(i.z+vec4(0.,i1.z,i2.z,1.))+i.y+vec4(0.,i1.y,i2.y,1.))+i.x+vec4(0.,i1.x,i2.x,1.));
+    float n_=0.142857142857;vec3 ns=n_*D.wyz-D.xzx;
+    vec4 j=p-49.*floor(p*ns.z*ns.z);vec4 x_=floor(j*ns.z);vec4 y_=floor(j-7.*x_);
+    vec4 x=x_*ns.x+ns.yyyy;vec4 y=y_*ns.x+ns.yyyy;vec4 h=1.-abs(x)-abs(y);
+    vec4 b0=vec4(x.xy,y.xy);vec4 b1=vec4(x.zw,y.zw);
+    vec4 s0=floor(b0)*2.+1.;vec4 s1=floor(b1)*2.+1.;vec4 sh=-step(h,vec4(0.));
+    vec4 a0=b0.xzyw+s0.xzyw*sh.xxyy;vec4 a1=b1.xzyw+s1.xzyw*sh.zzww;
+    vec3 p0=vec3(a0.xy,h.x);vec3 p1=vec3(a0.zw,h.y);vec3 p2=vec3(a1.xy,h.z);vec3 p3=vec3(a1.zw,h.w);
+    vec4 norm=taylorInvSqrt(vec4(dot(p0,p0),dot(p1,p1),dot(p2,p2),dot(p3,p3)));
+    p0*=norm.x;p1*=norm.y;p2*=norm.z;p3*=norm.w;
+    vec4 m=max(.6-vec4(dot(x0,x0),dot(x1,x1),dot(x2,x2),dot(x3,x3)),0.);m=m*m;
+    return 42.*dot(m*m,vec4(dot(p0,x0),dot(p1,x1),dot(p2,x2),dot(p3,x3)));
+  }
+  void main(){
+    vUv=uv;vNormal=normalize(normalMatrix*normal);
+    vec3 pos=position;
+    float wave1=sin(pos.y*2.5+time*1.5+layerOffset)*cos(pos.x*2.-time*1.2);
+    float wave2=sin(pos.x*3.-time*1.8+layerOffset)*cos(pos.z*2.5+time*1.5);
+    float wave3=sin(pos.z*2.8+time*1.6+layerOffset)*cos(pos.y*2.3-time*1.3);
+    float noise1=snoise(pos*0.7+time*0.25+layerOffset);
+    float noise2=snoise(pos*1.1-time*0.18+layerOffset*0.5);
+    float distortion=(wave1+wave2+wave3)*0.018+(noise1*0.016+noise2*0.014);
+    distortion*=(0.3+audioLevel*0.6);
+    pos=pos+normal*distortion;
+    vPosition=pos;
+    gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.);
+  }
+`;
+
+const fragmentShader = `
+  varying vec3 vNormal; varying vec3 vPosition; varying vec2 vUv;
+  uniform vec3 sphereColor; uniform float opacity; uniform float time; uniform float chromaticAberration;
+
+  vec3 rgb2hsv(vec3 c){
+    vec4 K=vec4(0.,-1./3.,2./3.,-1.);
+    vec4 p=mix(vec4(c.bg,K.wz),vec4(c.gb,K.xy),step(c.b,c.g));
+    vec4 q=mix(vec4(p.xyw,c.r),vec4(c.r,p.yzx),step(p.x,c.r));
+    float d=q.x-min(q.w,q.y);float e=1.e-10;
+    return vec3(abs(q.z+(q.w-q.y)/(6.*d+e)),d/(q.x+e),q.x);
+  }
+  vec3 hsv2rgb(vec3 c){
+    vec4 K=vec4(1.,2./3.,1./3.,3.);
+    vec3 p=abs(fract(c.xxx+K.xyz)*6.-K.www);
+    return c.z*mix(K.xxx,clamp(p-K.xxx,0.,1.),c.y);
+  }
+
+  void main(){
+    vec3 viewDir=normalize(cameraPosition-vPosition);
+    vec3 norm=normalize(vNormal);
+    float fresnel=pow(1.-abs(dot(viewDir,norm)),2.5);
+
+    /* ── Rainbow holographic shift ── */
+    float rainbowShift=norm.x*0.5+norm.y*0.2+norm.z*0.1;
+    rainbowShift+=sin(vPosition.x*5.+time*0.5)*0.01+cos(vPosition.y*4.-time*0.3)*0.01;
+    rainbowShift=fract(rainbowShift);
+    vec3 rainbow=hsv2rgb(vec3(rainbowShift,0.9,1.2));
+
+    /* ── Chromatic aberration ── */
+    vec3 hsv=rgb2hsv(sphereColor);
+    float ab=chromaticAberration*fresnel;
+    vec3 hsvR=hsv; hsvR.x=fract(hsv.x+ab*0.18); vec3 cR=hsv2rgb(hsvR);
+    vec3 hsvB=hsv; hsvB.x=fract(hsv.x-ab*0.18); vec3 cB=hsv2rgb(hsvB);
+    vec3 color=vec3(cR.r, sphereColor.g, cB.b);
+
+    /* ── Holographic blend ── */
+    float holoI=fresnel*0.75+0.15;
+    color=mix(color,rainbow,holoI*0.65);
+
+    /* ── Glass: dark interior, bright edge glow ── */
+    float edgeGlow=pow(fresnel, 1.2);
+    float interior=1.-edgeGlow;
+
+    /* Deep transparent interior */
+    float glassAlpha=mix(opacity*0.55, opacity*1.0, edgeGlow);
+
+    /* Edge color boost with aurora glow */
+    color+=edgeGlow*chromaticAberration*0.25;
+    color=mix(color*0.65, color*1.6, edgeGlow);
+
+    /* ── Shimmer ── */
+    float shimmer=sin(vPosition.x*8.+vPosition.y*6.+time*2.)*0.06+0.94;
+    float pulse=1.+sin(time*1.2)*0.08;
+    color*=shimmer*pulse;
+
+    /* ── Inner specular highlight (glass reflection) ── */
+    vec3 lightDir=normalize(vec3(0.5,0.8,1.0));
+    float spec=pow(max(dot(reflect(-lightDir,norm),viewDir),0.),32.);
+    color+=spec*0.7*vec3(0.8,1.0,1.0);
+
+    gl_FragColor=vec4(color, glassAlpha);
+  }
+`;
+
+function initOrb() {
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  const canvas = document.getElementById('threeCanvas');
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  const initialState = orbStates.idle;
+  initialState.layers.forEach((lc, idx) => {
+    const geo = new THREE.SphereGeometry(lc.scale, 80, 80);
+    const mat = new THREE.ShaderMaterial({
+      vertexShader, fragmentShader,
+      uniforms: {
+        time: { value: 0 },
+        audioLevel: { value: 0 },
+        layerOffset: { value: idx * 2.0 },
+        sphereColor: { value: new THREE.Color(lc.color) },
+        opacity: { value: lc.opacity },
+        chromaticAberration: { value: initialState.chromaticAberration },
+        cameraPosition: { value: camera.position }
+      },
+      transparent: true, side: THREE.DoubleSide,
+      blending: THREE.NormalBlending, depthWrite: false
+    });
+    const sphere = new THREE.Mesh(geo, mat);
+    sphere.userData = { baseScale: lc.scale, rotationSpeed: lc.rotationSpeed };
+    scene.add(sphere);
+    orbLayers.push(sphere);
+  });
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+  const pl1 = new THREE.PointLight(0x00ffcc, 1.8, 80);
+  pl1.position.set(4, 4, 6); scene.add(pl1);
+  const pl2 = new THREE.PointLight(0xaa44ff, 1.4, 80);
+  pl2.position.set(-4, -4, 6); scene.add(pl2);
+  const pl3 = new THREE.PointLight(0xff66aa, 1.2, 60);
+  pl3.position.set(0, -5, 4); scene.add(pl3);
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Click on canvas = toggle recording
+  canvas.addEventListener('click', async () => { await resumeAudioCtx(); toggleRecording(); });
+
+  animateOrb();
+}
+
+function setOrbState(stateName) {
+  if (!orbStates[stateName]) return;
+  currentOrbState = stateName;
+  const state = orbStates[stateName];
+
+  // Update glow ring color based on state
+  const glowEl = document.getElementById('orbGlowRing');
+  if (glowEl) {
+    const glowColors = {
+      idle:      'rgba(0,255,200,0.18), rgba(0,170,255,0.10), rgba(170,68,255,0.07)',
+      listening: 'rgba(0,255,200,0.35), rgba(68,255,170,0.20), rgba(0,220,255,0.10)',
+      thinking:  'rgba(170,68,255,0.30), rgba(136,51,238,0.18), rgba(204,102,255,0.08)',
+      speaking:  'rgba(255,102,170,0.35), rgba(255,68,170,0.22), rgba(255,136,204,0.10)'
+    };
+    const c = glowColors[stateName] || glowColors.idle;
+    glowEl.style.background = `radial-gradient(circle, ${c}, transparent 75%)`;
+  }
+
+  orbLayers.forEach((layer, idx) => {
+    const lc = state.layers[idx];
+    if (!lc) return;
+    layer.material.uniforms.sphereColor.value.setHex(lc.color);
+    layer.material.uniforms.opacity.value = lc.opacity;
+    layer.material.uniforms.chromaticAberration.value = state.chromaticAberration;
+    layer.userData.rotationSpeed = lc.rotationSpeed;
+    layer.userData.baseScale = lc.scale;
+  });
+}
+
+function updateSpeakingCadence() {
+  const now = Date.now() * 0.001;
+  if (now >= speakingCadence.nextChange) {
+    const t = Math.random();
+    if (t < 0.3) { speakingCadence.intensity = 0.7 + Math.random() * 0.3; speakingCadence.nextChange = now + 0.15 + Math.random() * 0.15; }
+    else if (t < 0.6) { speakingCadence.intensity = 0.5 + Math.random() * 0.4; speakingCadence.nextChange = now + 0.3 + Math.random() * 0.3; }
+    else if (t < 0.85) { speakingCadence.intensity = 0.6 + Math.random() * 0.4; speakingCadence.nextChange = now + 0.5 + Math.random() * 0.4; }
+    else { speakingCadence.intensity = 0.1 + Math.random() * 0.2; speakingCadence.nextChange = now + 0.2 + Math.random() * 0.3; }
+  }
+  return Math.max(0, speakingCadence.intensity + Math.sin(Date.now() * 0.001 * 10) * 0.08);
+}
+
+function animateOrb() {
+  requestAnimationFrame(animateOrb);
+  const state = orbStates[currentOrbState];
+
+  if (state.pulsate) {
+    if (state.pulsateMode === 'thinking') {
+      const p = (Math.sin(Date.now() * 0.001 * 1.5) + 1) / 2;
+      targetScale = 1 + state.pulsateMin + p * (state.pulsateMax - state.pulsateMin);
+    } else if (state.pulsateMode === 'cadence' || state.pulsateMode === 'audio-reactive') {
+      const c = updateSpeakingCadence();
+      targetScale = 1 + state.pulsateMin + c * (state.pulsateMax - state.pulsateMin);
+    }
+    const smoothFactor = currentOrbState === "idle" ? 0.04 : 0.15;
+    currentScale += (targetScale - currentScale) * smoothFactor;
+  } else {
+    currentScale += (1.0 - currentScale) * 0.1;
+  }
+
+  orbLayers.forEach((layer, idx) => {
+    const lc = state.layers[idx];
+    if (!lc) return;
+    layer.material.uniforms.time.value += state.timeSpeed;
+    layer.material.uniforms.audioLevel.value = state.audioLevel;
+    layer.rotation.x += layer.userData.rotationSpeed.x;
+    layer.rotation.y += layer.userData.rotationSpeed.y;
+    layer.rotation.z += layer.userData.rotationSpeed.z;
+    const s = layer.userData.baseScale * currentScale;
+    layer.scale.set(s, s, s);
+  });
+
+  renderer.render(scene, camera);
+}
+
+// ═══════════════════════════════════════════════════
+// CHATBOT LOGIC
+// ═══════════════════════════════════════════════════
+const WORKER = 'https://nmth-api-proxy.ougaga26.workers.dev';
+
+const KB = [
+  { category:"開放時間", q:"博物館幾點開館？幾點關門？", a:"開館時間為週二至週日 09:00–17:00，最後入場時間為 16:30。" },
+  { category:"開放時間", q:"博物館什麼時候休館？", a:"每週一休館（逢國定假日照常開館，連續假日結束後一日休館）。農曆除夕及大年初一、政府公告之天然災害停止上班日亦休館。" },
+  { category:"開放時間", q:"2026年哪些週一有開館？", a:"115年度（2026年）特別開館的週一：4/6、5/18、9/28、10/26。" },
+  { category:"開放時間", q:"2026年特別休館日？", a:"115年度（2026年）特別休館日：2/16、2/17、4/7、5/19、9/29、10/27。8/31–9/7 閉館維修。" },
+  { category:"設施", q:"湖畔圖書館幾點開放？", a:"湖畔圖書館開放時間為 09:00–17:00（開館日）。" },
+  { category:"設施", q:"臺灣歷史公園幾點開放？", a:"臺灣歷史公園園區每日 05:00–22:00 開放，全年無休。" },
+  { category:"VR", q:"VR再現製造所有哪些節目？場次？", a:"目前有兩部VR：\n1.《hongu' Utax彩虹》2/3–7/5，每週二、四、六，場次09:30、10:15、11:00、14:00、14:45、15:30。\n2.《重返第一法庭．噍吧哖世紀大審判》2/3–7/5，每週三、五、日，同場次。\n片長約17分鐘，座位5席+1席無障礙。" },
+  { category:"票價", q:"門票多少錢？", a:"個人票價：\n・全票 NT$100\n・優待票 NT$50（學生、6–12歲兒童、65歲以上長者假日）\n・免票：未滿6歲兒童、65歲以上長者平日、身心障礙人士及必要陪同者1人。" },
+  { category:"票價", q:"小孩要買票嗎？", a:"未滿6歲免費。6歲以上未滿12歲優待票 NT$50。" },
+  { category:"票價", q:"65歲以上長者票價？", a:"65歲以上本國籍長者：平日免票，假日優待票 NT$50。持敬老卡者同規定。" },
+  { category:"票價", q:"身心障礙者要買票嗎？", a:"身心障礙人士及必要陪同者1人免票，請出示相關證件。" },
+  { category:"票價", q:"學生票多少錢？", a:"個人學生優待票 NT$50。學生團體（10人以上）NT$60/人，含語音導覽機。" },
+  { category:"票價優惠", q:"有什麼特殊優惠？", a:"2026年特殊優惠：\n・兒童節（4/3–4/6）：12歲以下免票\n・國際博物館日（5/16–5/18）：全館免票\n・原住民族日（8/1–8/2）：憑證明免票\n・國慶日（10/9–10/11）：優待票 NT$50\n・臺灣文化日（10/17）：全館免票" },
+  { category:"退票", q:"票可以退嗎？", a:"未使用票券可於購買當日閉館30分鐘前退票，免手續費。一經使用恕不退票。" },
+  { category:"參觀須知", q:"可以帶食物飲料嗎？", a:"展場禁止飲食、嚼食口香糖或吸菸。飲水區可飲白開水，哺乳室可哺乳。" },
+  { category:"參觀須知", q:"可以帶寵物嗎？", a:"展示教育大樓內禁止寵物（合格工作犬除外）。戶外園區可帶寵物，須繫鏈並自行清理排泄物。" },
+  { category:"參觀須知", q:"可以拍照嗎？可以用閃光燈嗎？", a:"一般拍照可以，但禁止自拍棒、腳架、閃光燈、補光燈。標示禁拍區嚴禁拍照錄影。" },
+  { category:"參觀須知", q:"有寄物服務嗎？", a:"展場設有寄物櫃，限當日取回，館方不負保管責任。" },
+  { category:"設施", q:"廁所在哪裡？洗手間在哪？", a:"各樓層均設有廁所，請依館內指標前往，或詢問服務人員。建議開啟園區地圖查看詳細位置。" },
+  { category:"設施", q:"哺乳室在哪裡？育嬰室在哪？", a:"館內設有哺乳室，請詢問1樓服務台，服務人員會為您指引位置。" },
+  { category:"設施", q:"電梯在哪裡？無障礙設施在哪？", a:"展示教育大樓設有電梯與無障礙坡道，請依館內指標指示。如需協助請洽無障礙服務專線：06-356-8889 分機 8103。" },
+  { category:"設施", q:"服務台在哪裡？詢問台在哪？", a:"服務台位於展示教育大樓1樓入口大廳，開館時間均有服務人員。" },
+  { category:"設施", q:"餐廳在哪裡？有吃飯的地方嗎？咖啡廳在哪？", a:"館內設有輕食區，詳細位置請參考園區地圖或詢問1樓服務台。展場內禁止飲食。" },
+  { category:"設施", q:"哪裡可以買紀念品？文創商店在哪？", a:"文創商品區位於展示教育大樓1樓，販售各式臺史博特色商品與文創紀念品。" },
+  { category:"設施", q:"停車場入口在哪裡？停車場怎麼進去？", a:"停車場入口請依園區外圍指標進入，建議開啟園區地圖確認位置。小客車 NT$50/次，機車免費。" },
+  { category:"設施", q:"入口在哪裡？怎麼進館？", a:"主要入口位於展示教育大樓正面，從停車場或園區步道均可抵達。建議開啟園區地圖確認路線。" },
+  { category:"交通", q:"博物館地址在哪？", a:"地址：709025 臺南市安南區長和路一段250號。" },
+  { category:"交通", q:"搭高鐵怎麼去？", a:"高鐵台南站後：\n1. 搭計程車直達（約35分）\n2. 轉臺鐵→台南站→搭5或18路至和順轉運站步行5分\n3. 轉臺鐵→永康站→搭20或905路至和順轉運站步行5分" },
+  { category:"交通", q:"搭火車怎麼去？", a:"從台南站：計程車約25分，或搭5、18路至和順步行5分（約60分）。\n從永康站：計程車約15分，或搭20、905路至和順步行5分（約25分）。" },
+  { category:"交通", q:"有哪些公車可以到？", a:"到「和順轉運站」步行約5分鐘：\n・5路：台南火車站→和順\n・18路：台南轉運站→和順\n・20路：永康火車站→和順\n・905路：永康轉運站→和順" },
+  { category:"停車", q:"停車費多少？", a:"小客車 NT$50/次，大客車 NT$150/次，機車免費。離館前至自動繳費機繳費。" },
+  { category:"停車", q:"身心障礙者停車優惠？", a:"持身心障礙手冊及停車位識別證，至出口收費亭享半價 NT$25（服務時間 08:30–17:30）。" },
+  { category:"特展", q:"現在有哪些特展？", a:"目前三檔特展：\n1.《轉機：臺灣女子移動紀事》2025/12/23–2026/8/30，4樓第1特展室\n2.《地方記憶・遊牧》2026/2/10–5/31，1樓大廳\n3.《開箱吧！臺史博館藏桌遊》2025/6/3–2026/4/26，4樓第3特展室" },
+  { category:"特展", q:"轉機特展是什麼？轉機臺灣女子移動紀事內容？", a:"《轉機：臺灣女子移動紀事》\n展期：2025/12/23–2026/8/30\n地點：展示教育大樓4樓第1特展室\n\n以「移動」為關鍵字，回顧百年來臺灣女性如何在制度與社會框架限制中尋找轉圜的可能。以「行前準備」為起點，探討纏足、養女制度與月經禁忌等議題。\n\n國內線：日本時代新式產婆、1949年女性攜老幼重建家園、1970年代鐵道隨車員與藝霞歌舞劇團、工廠女工撐起Made in Taiwan經濟奇蹟、女同志現身經驗、1990年代跨國婚姻社會處境。\n\n國際線：臺灣第一位環球旅行者張聰明、陳進林月雲莊淑旂赴日深造、謝雪紅在蘇聯的生命轉折、美國作為求學移民流亡之地、三毛筆下的撒哈拉。" },
+  { category:"特展", q:"地方記憶遊牧是什麼展覽？地方記憶・遊牧內容？", a:"《地方記憶・遊牧：國家文化記憶庫社群合作成果展》\n展期：2026/2/10–5/31\n地點：展示教育大樓1樓大廳\n\n藉由數位科技與社群共創保存臺灣多元文化DNA。自2021年起足跡遍及城市、小鎮、鄉村與部落。\n\n四大展區：\n・教案小屋：地方故事進入課堂，從戲劇、設計、導覽到AI教學\n・光影故事帳：桃園大溪、彰化溪州、臺東都蘭三地影像紀錄\n・聲音角落：戴耳機聆聽市場喧鬧、街巷腳步、風聲鳥鳴\n・下一段記憶遊牧：寫下你的文化記憶，共同創造展覽" },
+  { category:"特展", q:"開箱吧桌遊特展是什麼？開箱吧臺史博館藏桌遊內容？", a:"《開箱吧！臺史博館藏桌遊特展》\n展期：2025/6/3–2026/4/26（即將結束）\n地點：展示教育大樓4樓第3特展室\n\n收藏阿公阿嬤時代的桌上遊戲，從清代到戰後，像時光機帶你回到過去。\n\n五大主題：\n・旋轉吧！螺旋人生：清代葫蘆問、日治時代雙六遊戲\n・畫上夢想即刻啟程：環遊世界桌遊、大富翁、幸福人與奮鬥人生\n・歷史考卷不會考但很好玩：升官圖、反攻勝利棋\n・動物世界大冒險：虎棋、鬥獸棋、老鼠牌\n・噓！偷偷摸摸玩：十八骰仔、四色牌、天九牌、麻將、天地牌\n\n現場設有桌遊體驗區！" },
+  { category:"常設展", q:"常設展叫什麼？有哪些單元？", a:"常設展《斯土斯民：臺灣的故事》共7大單元：臺灣交會之島、最初的抵岸、倚海而生的島與人、山海之間的共存與競逐、新秩序下的苦悶與夢想、走向民主這條路、大家的博物館。" },
+  { category:"聯絡", q:"博物館電話是？", a:"電話：06-356-8889\n無障礙服務專線：06-356-8889 分機 8103" }
+];
+
+const KB_TEXT = KB.map(e=>`【${e.category}】${e.q}\n${e.a}`).join('\n\n');
+const SYSTEM_PROMPT = `你是國立臺灣歷史博物館（臺史博）的 AI 問答助理。
+【規則】
+1. 只能根據以下知識庫回答。找不到答案請說「我目前的資料沒有這個資訊，建議聯繫館方：06-356-8889」。
+2. 問題模糊請主動反問。根據對話上下文理解真實意圖。
+3. 語氣親切簡潔，使用繁體中文。
+4. 回答盡量簡短，2-4句為佳。
+5. 【重要】絕對禁止使用任何 Markdown 格式符號，包括 * ** # ## ### - 等。不可用星號強調文字，不可用井號當標題，不可用連字號當列點。若需要列點請用「・」或數字加點（1. 2. 3.）代替。
+6. 【重要】若回覆中需要列出多個項目，請用「・」符號或換行數字列表，例如：「・項目一\n・項目二」。
+【知識庫】\n${KB_TEXT}`;
+
+let conversationHistory = [];
+let isLoading = false;
+let isRecording = false;
+let mediaRecorder = null;
+let hasMessages = false;
+
+// ── Shared AudioContext ─────────────────────────────
 let sharedAudioCtx = null;
 let currentSource = null;
+let audioUnlocked = false;
 
 function getAudioCtx() {
   if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
@@ -168,115 +1109,458 @@ function getAudioCtx() {
   }
   return sharedAudioCtx;
 }
-
-// 核心修正：主動喚醒機制
 async function resumeAudioCtx() {
   const ctx = getAudioCtx();
   if (ctx.state === 'suspended') {
     await ctx.resume();
   }
-  // 為了 iOS Safari，播放一個空 buffer 確保硬體輸出解鎖
-  const buffer = ctx.createBuffer(1, 1, 22050);
-  const source = ctx.createBufferSource();
-  source.buffer = buffer;
-  source.connect(ctx.destination);
-  source.start(0);
+  // Play silent buffer to truly wake up hardware on iOS
+  if (ctx.state === 'running' && !audioUnlocked) {
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    audioUnlocked = true;
+  }
   return ctx;
 }
 
-// ═══════════════════════════════════════════════════
-// CHATBOT & TTS LOGIC
-// ═══════════════════════════════════════════════════
-const WORKER = 'https://nmth-api-proxy.ougaga26.workers.dev';
-let conversationHistory = [];
-let isLoading = false;
+// DOM refs
+const voiceLabel = document.getElementById('voiceLabel');
+const greetingText = document.getElementById('greetingText');
+const greetingSubtext = document.getElementById('greetingSubtext');
+const chatArea = document.getElementById('chatArea');
+const sendBtn = document.getElementById('sendBtn');
+const userInput = document.getElementById('userInput');
+const chatTabBtn = document.getElementById('chatTabBtn');
+const chipRow = document.getElementById('chipRow');
 
-async function sendMessage(text) {
-  const q = text || document.getElementById('userInput').value.trim();
-  if (!q || isLoading) return;
+function setVoiceLabel(t) { voiceLabel.textContent = t; voiceLabel.style.opacity = t ? '1' : '0'; }
 
-  // 重要：在使用者「點擊」的瞬間喚醒音訊
-  await resumeAudioCtx().catch(e => console.log("Audio Init error", e));
+function openDrawer() {
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  setTimeout(() => chatArea.scrollTop = chatArea.scrollHeight, 100);
+}
+function closeDrawer() {
+  document.getElementById('drawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+}
 
-  appendMsg(q, 'user');
-  document.getElementById('userInput').value = '';
-  isLoading = true;
-  setOrbState('thinking');
+// Swipe down to close
+let touchStartY = 0;
+document.getElementById('drawer').addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; }, {passive:true});
+document.getElementById('drawer').addEventListener('touchend', e => { if (e.changedTouches[0].clientY - touchStartY > 60) closeDrawer(); }, {passive:true});
 
-  try {
-    const res = await fetch(`${WORKER}/gemini`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: q }] }] })
-    });
-    const data = await res.json();
-    const reply = data.candidates[0].content.parts[0].text;
-    
-    appendMsg(reply, 'bot');
-    await speakText(reply);
-  } catch (err) {
-    appendMsg('連線失敗，請稍後再試。', 'bot');
-    setOrbState('idle');
+function appendMsg(text, role, isError=false) {
+  document.getElementById('chatEmpty')?.remove();
+  if (!hasMessages && role==='user') {
+    hasMessages = true;
+    chatTabBtn.classList.add('has-messages');
+    chipRow.style.display = 'none';
   }
-  isLoading = false;
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  const av = document.createElement('div');
+  av.className = `avatar ${role}`;
+  if (role === 'bot') {
+    const img = document.createElement('img');
+    img.src = 'https://ougaga26-lab.github.io/MuseumAIChatbarV1/logo.png';
+    img.alt = 'AI';
+    av.appendChild(img);
+  } else {
+    av.textContent = '我';
+  }
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}${isError?' error':''}`;
+  bubble.style.whiteSpace = 'pre-line';
+  bubble.textContent = text;
+  div.appendChild(av); div.appendChild(bubble);
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className='typing'; div.id='typingIndicator';
+  const av = document.createElement('div');
+  av.className='avatar bot'; av.textContent='史';
+  const dots = document.createElement('div');
+  dots.className='typing-dots';
+  dots.innerHTML='<span></span><span></span><span></span>';
+  div.appendChild(av); div.appendChild(dots);
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+function hideTyping() { document.getElementById('typingIndicator')?.remove(); }
+
+async function callGemini(userMessage) {
+  conversationHistory.push({role:'user',parts:[{text:userMessage}]});
+  const res = await fetch(`${WORKER}/gemini`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      system_instruction:{parts:[{text:SYSTEM_PROMPT}]},
+      contents: conversationHistory,
+      generationConfig:{maxOutputTokens:600,temperature:0.3}
+    })
+  });
+  if (!res.ok) throw new Error(`${res.status}`);
+  const data = await res.json();
+  const reply = data.candidates[0].content.parts[0].text;
+  conversationHistory.push({role:'model',parts:[{text:reply}]});
+  return reply;
 }
 
 async function speakText(text) {
-  const ctx = await resumeAudioCtx(); // 播放前再次確認狀態
-
-  if (currentSource) { try { currentSource.stop(); } catch(e) {} }
-
+  if (currentSource) {
+    try { currentSource.stop(); } catch(e) {}
+    currentSource = null;
+  }
+  // Re-confirm context is running before fetch
+  const ctx = await resumeAudioCtx();
   setOrbState('speaking');
   setVoiceLabel('說話中…');
-
   try {
     const res = await fetch(`${WORKER}/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text})
     });
+    if (!res.ok) throw new Error('TTS failed');
     const arrayBuf = await res.arrayBuffer();
-    
-    // 使用 callback 方式 decode 以求最佳手機相容性
+    // Use callback form for compatibility with older mobile browsers
     ctx.decodeAudioData(arrayBuf, (audioBuf) => {
       const source = ctx.createBufferSource();
       source.buffer = audioBuf;
       source.connect(ctx.destination);
       currentSource = source;
-      source.onended = () => { setOrbState('idle'); setVoiceLabel(''); };
+      source.onended = () => {
+        if (currentSource === source) currentSource = null;
+        setOrbState('idle'); setVoiceLabel('');
+        greetingText.textContent = 'Gotour AI 智慧小助手';
+        greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
+      };
       source.start(0);
+    }, (err) => {
+      console.error('Decode error:', err);
+      setOrbState('idle'); setVoiceLabel('');
     });
-  } catch (e) {
-    setOrbState('idle');
-    setVoiceLabel('');
+  } catch(e) {
+    console.error('TTS error:', e);
+    setOrbState('idle'); setVoiceLabel('');
   }
 }
 
-// ═══════════════════════════════════════════════════
-// UI & THREE.JS (簡化邏輯以確保執行)
-// ═══════════════════════════════════════════════════
-function appendMsg(text, role) {
-  const chatArea = document.getElementById('chatArea');
-  const div = document.createElement('div');
-  div.className = `msg ${role}`;
-  div.innerHTML = `<div class="bubble ${role}">${text}</div>`;
-  chatArea.appendChild(div);
-  chatArea.scrollTop = chatArea.scrollHeight;
+async function toggleRecording() {
+  await resumeAudioCtx();
+  if (isLoading) return;
+
+  if (isRecording) {
+    mediaRecorder?.state === 'recording' && mediaRecorder.stop();
+    return;
+  }
+
+  isRecording = true;
+  setOrbState('listening');
+  setVoiceLabel('聆聽中… 再點停止');
+  if (currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    const chunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t=>t.stop());
+      isRecording = false;
+      setOrbState('thinking');
+      setVoiceLabel('辨識中…');
+      try {
+        const wavBlob = await convertToWav(new Blob(chunks,{type:'audio/webm'}));
+        const res = await fetch(`${WORKER}/stt`, {
+          method:'POST', headers:{'Content-Type':'audio/wav'}, body:wavBlob
+        });
+        const data = await res.json();
+        const text = data.DisplayText || '';
+        setVoiceLabel('');
+        if (text) {
+          sendMessage(text);
+        } else {
+          setOrbState('idle');
+          setVoiceLabel('未偵測到語音');
+          setTimeout(()=>setVoiceLabel(''), 2000);
+        }
+      } catch { setOrbState('idle'); setVoiceLabel('辨識失敗，請再試'); setTimeout(()=>setVoiceLabel(''),2500); }
+    };
+    mediaRecorder.start();
+    setTimeout(() => mediaRecorder?.state==='recording' && mediaRecorder.stop(), 10000);
+  } catch {
+    isRecording = false; setOrbState('idle');
+    setVoiceLabel('無法存取麥克風'); setTimeout(()=>setVoiceLabel(''),2500);
+  }
 }
 
-// 點擊球球錄音 (同時喚醒音訊)
-document.getElementById('threeCanvas').addEventListener('click', async () => {
-  await resumeAudioCtx();
-  toggleRecording();
+async function convertToWav(blob) {
+  const ctx = new AudioContext({sampleRate:16000});
+  const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
+  const pcm = audio.getChannelData(0);
+  return new Blob([pcmToWav(pcm,16000)],{type:'audio/wav'});
+}
+function pcmToWav(pcm,sr) {
+  const buf = new ArrayBuffer(44+pcm.length*2);
+  const v = new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+pcm.length*2,true);ws(8,'WAVE');ws(12,'fmt ');
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);
+  ws(36,'data');v.setUint32(40,pcm.length*2,true);
+  for(let i=0;i<pcm.length;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,pcm[i]))*0x7FFF,true);
+  return buf;
+}
+
+async function sendMessage(text) {
+  const q = text || userInput.value.trim();
+  if (!q || isLoading) return;
+  // Wake up AudioContext at the moment of user gesture
+  resumeAudioCtx().catch(e => console.log('AudioContext wakeup:', e));
+  appendMsg(q,'user');
+  userInput.value=''; autoResize(userInput);
+  isLoading=true; sendBtn.disabled=true;
+  resumeAudioCtx();
+  showTyping();
+  setOrbState('thinking');
+  greetingText.textContent='思考中…';
+  greetingSubtext.textContent='';
+
+  try {
+    const reply = await callGemini(q);
+    hideTyping();
+    appendMsg(reply,'bot');
+    greetingText.textContent='回答完成';
+    greetingSubtext.textContent='點球球繼續說話';
+
+    // Intent detection based on USER QUESTION
+    const replyWithContext = buildReplyWithContext(q, reply);
+    speakText(replyWithContext);
+  } catch(err) {
+    hideTyping();
+    appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。','bot',true);
+    conversationHistory.pop();
+    setOrbState('idle');
+    greetingText.textContent='你好，我是臺史博助理';
+    greetingSubtext.textContent='點球球說話，或向上滑動查看對話';
+  }
+  isLoading=false; sendBtn.disabled=false;
+}
+
+function showComingSoon(name) {
+  const label = document.getElementById('voiceLabel');
+  label.textContent = name + ' 即將推出';
+  label.style.opacity = '1';
+  setTimeout(() => { label.textContent = ''; label.style.opacity = '0'; }, 2000);
+}
+
+function askChip(btn) { sendMessage(btn.textContent); }
+function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
+function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
+
+
+// ── Intent Detection (based on USER QUESTION) ─────
+function buildReplyWithContext(question, reply) {
+  const q = question;
+
+  const specificQ = ['地方記憶','遊牧','轉機','臺灣女子','開箱吧','桌遊特展'];
+  const exhibitQ  = ['展覽','特展','有什麼展','推薦展覽','有哪些展','現在有什麼展'];
+  const mapQ = [
+    '廁所','洗手間','哺乳','育嬰','電梯','停車場','服務台','詢問台',
+    '紀念品','文創','餐廳','咖啡','在哪裡','在哪','哪裡','幾樓',
+    '入口','出口','怎麼走','怎麼進','位置','方向','路線','園區地圖'
+  ];
+
+  const hasSpecific = specificQ.some(k => q.includes(k));
+  const hasExhibit  = exhibitQ.some(k => q.includes(k));
+  const hasMap      = mapQ.some(k => q.includes(k));
+
+  if (hasSpecific) {
+    const idx = ['轉機','臺灣女子'].some(k=>q.includes(k)) ? 0
+              : ['地方記憶','遊牧'].some(k=>q.includes(k)) ? 1
+              : ['開箱吧','桌遊'].some(k=>q.includes(k)) ? 2 : -1;
+    setTimeout(() => { openExhibitDrawer(); if (idx >= 0) openExhibitDetail(idx); }, 900);
+    return reply + ' 我幫您開啟展覽資訊了，您可以參考。';
+  } else if (hasExhibit) {
+    setTimeout(() => openExhibitDrawer(), 900);
+    return reply + ' 我幫您開啟展覽列表了，您可以參考。';
+  } else if (hasMap) {
+    setTimeout(() => openMapDrawer(), 900);
+    return reply + ' 我馬上幫你開啟園區地圖。';
+  }
+  return reply;
+}
+
+
+function detectAndOpenDrawer(reply) {
+  const r = reply;
+
+  // Exhibition intent keywords
+  const exhibitKeywords = [
+    '特展', '展覽', '地方記憶', '遊牧', '轉機', '開箱吧', '桌遊特展',
+    '展示教育大樓', '1樓大廳', '4樓', '第1特展室', '第3特展室',
+    '展覽列表', '目前有', '正在展出', '展出中', '特展室'
+  ];
+
+  // Map intent keywords  
+  const mapKeywords = [
+    '在哪裡', '哪一層', '樓', '大廳', '入口', '出口', '廁所', '停車',
+    '服務台', '哺乳室', '電梯', '樓梯', '導覽', '園區', '位置',
+    '怎麼走', '方向', '在哪', '地點', '路線'
+  ];
+
+  const hasExhibit = exhibitKeywords.some(k => r.includes(k));
+  const hasMap = mapKeywords.some(k => r.includes(k));
+
+  // Specific exhibition mentioned → open exhibit drawer expanded
+  const specificExhibit = [
+    '地方記憶', '遊牧', '轉機：', '轉機特展', '臺灣女子', '開箱吧', '桌遊特展'
+  ];
+  const hasSpecificExhibit = specificExhibit.some(k => r.includes(k));
+
+  if (hasExhibit) {
+    const msg = hasSpecificExhibit
+      ? '我幫您開啟展覽資訊了，您可以參考。'
+      : '我幫您開啟展覽列表了，您可以參考。';
+
+    // Wait for TTS to start, then open after a short delay
+    setTimeout(() => {
+      openExhibitDrawer();
+      if (hasSpecificExhibit) {
+        // Find which exhibit and auto-expand it
+        const idx = ['轉機：','臺灣女子','轉機特展'].some(k=>r.includes(k)) ? 0
+                  : ['地方記憶','遊牧'].some(k=>r.includes(k)) ? 1
+                  : ['開箱吧','桌遊'].some(k=>r.includes(k)) ? 2 : -1;
+        if (idx >= 0) openExhibitDetail(idx);
+      }
+    }, 800);
+  } else if (hasMap) {
+    setTimeout(() => {
+      openMapDrawer();
+    }, 800);
+  }
+}
+
+// ── Map ────────────────────────────────────────────
+function openMapDrawer(){document.getElementById('mapDrawer').classList.add('open');document.getElementById('mapOverlay').classList.add('open');}
+function closeMapDrawer(){document.getElementById('mapDrawer').classList.remove('open');document.getElementById('mapOverlay').classList.remove('open');}
+function switchMapTab(btn,panelId){document.querySelectorAll('.map-tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.map-panel').forEach(p=>p.classList.remove('active'));btn.classList.add('active');document.getElementById(panelId).classList.add('active');}
+const mapS={Park:{scale:1,x:0,y:0,dragging:false,lx:0,ly:0},Indoor:{scale:1,x:0,y:0,dragging:false,lx:0,ly:0}};
+function applyMapTransform(n){document.getElementById('zoomInner'+n).style.transform=`translate(${mapS[n].x}px,${mapS[n].y}px) scale(${mapS[n].scale})`;}
+function mapZoom(n,f){mapS[n].scale=Math.min(Math.max(mapS[n].scale*f,1),5);applyMapTransform(n);}
+
+// ── Exhibition ─────────────────────────────────────
+const EXHIBITS=[
+  {
+    badge:'進行中',
+    title:'轉機：臺灣女子移動紀事特展',
+    date:'2025-12-23 ～ 2026-08-30',
+    location:'展示教育大樓 4樓 第1特展室',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg',
+    desc:`以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
+
+特展以「行前準備」為起點，探討長期束縛女性行動的社會規訓，如纏足、養女制度與月經禁忌等議題。觀眾可循著展覽動線，選擇搭乘「國內線」或「國際線」，穿梭於9個登機門（GATE），走進16位女性人物的生命旅途。
+
+✈️ 國內線
+從日本時代新式產婆職業的興起，到1949年女性在戰亂中肩負攜帶老幼、重建家園的重擔；再到1970年代鐵道隨車員與藝霞歌舞劇團的巡演生活，以及工廠女工撐起「Made in Taiwan」經濟奇蹟的勞動身影，並進一步納入女同志的現身與安身經驗，再延伸至1990年代女性權益抗爭與跨國婚姻所面臨的社會處境。
+
+🌏 國際線
+從第一位進行環球旅行的臺灣人張聰明談起，延伸至陳進、林月雲、莊淑旂等人赴日深造的志向；回望謝雪紅在蘇聯的生命轉折，並呈現美國作為求學、移民與政治流亡之地的多重意義；再走入三毛筆下的撒哈拉，開啟廣大讀者對遠方的嚮往。`
+  },
+  {
+    badge:'進行中',
+    title:'地方記憶・遊牧：國家文化記憶庫社群合作成果展',
+    date:'2026-02-10 ～ 2026-05-31',
+    location:'展示教育大樓 1樓 大廳',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg',
+    desc:`在每個人心中，都藏著一塊屬於這片土地與時代的文化記憶。藉由數位科技與社群共創的力量，國家文化記憶庫得以保存臺灣多元的文化DNA，讓文化內容能被自由運用、轉譯與再創造。
+
+自2021年起，本館積極推動國家文化記憶庫計畫，足跡遍及城市、小鎮、鄉村與部落，寫下土地上的人文風景與生活脈動。《地方記憶‧遊牧》是一場跨地域文化能量的再聚合。
+
+🏫 教案小屋
+國家文化記憶庫的資源結合創新教學模式，使地方的故事可以進入課堂，從戲劇、設計、導覽到AI人工智慧，展現地方記憶如何滋養教育創意。
+
+🎬 光影故事帳
+從桃園大溪、彰化溪州、臺東都蘭帶回記憶故事，三個完全不同的地區和族群，展現截然不同的生命能量與文化願景。
+
+🎧 聲音角落
+戴上耳機，聆聽市場的喧鬧、街巷的腳步、風聲與鳥鳴，那些記憶與生活情感的虛形載體。
+
+✍️ 下一段記憶遊牧
+拾起紙和筆，寫下你的文化記憶，讓你的到來成為一場共同創造的展覽，和一次個體記憶的集體相遇。`
+  },
+  {
+    badge:'即將結束',
+    title:'開箱吧！臺史博館藏桌遊特展',
+    date:'2025-06-03 ～ 2026-04-26',
+    location:'展示教育大樓 4樓 第3特展室',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg',
+    desc:`傳說臺史博裡有一座寶庫，收藏著阿公阿嬤、阿爸阿母，甚至古代人玩過的桌上遊戲。這些遊戲就像時光機，帶我們回到過去，捕捉各個時代的樣貌與變化，承載著每個時代的歡樂記憶。
+
+🌀 旋轉吧！螺旋人生
+清代葫蘆問遊戲、日本時代臺北市街雙六，從螺旋路徑進入桌遊的時光隧道。
+
+✈️ 畫上夢想，即刻啟程
+環遊世界桌遊、大富翁（Monopoly）、幸福人與奮鬥人生——那個時代最流行的夢想全都在這裡。
+
+📚 歷史考卷不會考，但是很好玩
+升官圖隨著時代政府組織而改變；反攻勝利棋把國家對立搬上遊戲桌。老桌遊就是最生動的歷史課本。
+
+🦁 動物世界大冒險
+虎棋、鬥獸棋體驗食物鏈法則，臺灣獨創「老鼠牌」以十二生肖為卡面，可愛繽紛讓大小朋友都開心！
+
+🤫 噓！偷偷摸摸玩
+十八骰仔、四色牌、天九牌、麻將——一百多年前就流行，至今依然是臺灣長輩的最愛。還有臺灣設計家製作的「天地牌」讓玩法更豐富！
+
+現場設有桌遊體驗區，展覽就是遊戲場！`
+  }
+];
+function openExhibitDrawer(){document.getElementById('exhibitDrawer').classList.add('open');document.getElementById('exhibitOverlay').classList.add('open');}
+function closeExhibitDrawer(){const d=document.getElementById('exhibitDrawer');d.classList.remove('open','expanded');document.getElementById('exhibitOverlay').classList.remove('open');}
+function handleExhibitHandleTap(){const d=document.getElementById('exhibitDrawer');if(d.classList.contains('expanded'))closeExhibitDetail();else closeExhibitDrawer();}
+function openExhibitDetail(idx){
+  const ex=EXHIBITS[idx];
+  document.getElementById('exhibitDetailScroll').innerHTML=`<img class="exhibit-detail-banner" src="${ex.banner}" alt="${ex.title}"><div class="exhibit-detail-badge">${ex.badge}</div><div class="exhibit-detail-title">${ex.title}</div><div class="exhibit-detail-meta">🗓 ${ex.date}<br>📍 ${ex.location}</div><div class="exhibit-detail-desc">${ex.desc}</div>`;
+  document.getElementById('exhibitDetailScroll').scrollTop=0;
+  document.getElementById('exhibitDrawer').classList.add('expanded');
+}
+function closeExhibitDetail(){document.getElementById('exhibitDrawer').classList.remove('expanded');}
+
+// ── Wire up bottom buttons ──────────────────────────
+function showComingSoon(name){const l=document.getElementById('voiceLabel');l.textContent=name+' 即將推出';l.style.opacity='1';setTimeout(()=>{l.textContent='';l.style.opacity='0';},2000);}
+
+// Init
+window.addEventListener('DOMContentLoaded', function(){
+  initOrb();
+  // Map touch
+  ['Park','Indoor'].forEach(n=>{
+    const w=document.getElementById('zoomWrap'+n);const s=mapS[n];
+    w.addEventListener('mousedown',e=>{s.dragging=true;s.lx=e.clientX;s.ly=e.clientY;});
+    window.addEventListener('mousemove',e=>{if(!s.dragging)return;s.x+=e.clientX-s.lx;s.y+=e.clientY-s.ly;s.lx=e.clientX;s.ly=e.clientY;applyMapTransform(n);});
+    window.addEventListener('mouseup',()=>s.dragging=false);
+    w.addEventListener('touchstart',e=>{if(e.touches.length===1){s.dragging=true;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;}},{passive:true});
+    w.addEventListener('touchmove',e=>{if(s.dragging&&e.touches.length===1){s.x+=e.touches[0].clientX-s.lx;s.y+=e.touches[0].clientY-s.ly;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;applyMapTransform(n);}},{passive:true});
+    w.addEventListener('touchend',()=>s.dragging=false,{passive:true});
+    let ld=0;
+    w.addEventListener('touchstart',e=>{if(e.touches.length===2)ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},{passive:true});
+    w.addEventListener('touchmove',e=>{if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}ld=d;}},{passive:true});
+  });
+  // Map swipe close
+  const md=document.getElementById('mapDrawer');let mty=0;
+  md.addEventListener('touchstart',e=>{mty=e.touches[0].clientY;},{passive:true});
+  md.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-mty>80)closeMapDrawer();},{passive:true});
+  // Exhibit swipe
+  const ed=document.getElementById('exhibitDrawer');let ety=0;
+  ed.addEventListener('touchstart',e=>{ety=e.touches[0].clientY;},{passive:true});
+  ed.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-ety>80){if(ed.classList.contains('expanded'))closeExhibitDetail();else closeExhibitDrawer();}},{passive:true});
 });
 
-// ... 其餘 Three.js Orb 代碼與 V10 相同 ...
-// (此處省略部分繪圖邏輯以符合回應長度限制，請將原有的 Orb 動畫代碼貼回即可)
-
-function setOrbState(s) { /* 與 V10 同 */ }
-function openDrawer() { document.getElementById('drawer').classList.add('open'); document.getElementById('drawerOverlay').classList.add('open'); }
-function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawerOverlay').classList.remove('open'); }
-function autoResize(el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }
 </script>
 </body>
 </html>
