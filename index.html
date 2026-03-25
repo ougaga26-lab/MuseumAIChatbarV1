@@ -1298,8 +1298,6 @@ async function speakText(text) {
       source.onended = () => {
         if (currentSource === source) currentSource = null;
         setOrbState('idle'); setVoiceLabel('', 'idle');
-        greetingText.textContent = 'Gotour AI 智慧小助手';
-        greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
       };
       source.start(0);
     }, (err) => {
@@ -1351,15 +1349,15 @@ async function toggleRecording() {
         } else {
           setOrbState('idle');
           setVoiceLabel('未偵測到語音', 'stt');
-          setTimeout(()=>setVoiceLabel(''), 2000);
+          setTimeout(()=>setVoiceLabel('','idle'), 2000);
         }
-      } catch { setOrbState('idle'); setVoiceLabel('辨識失敗，請再試', 'stt'); setTimeout(()=>setVoiceLabel(''),2500); }
+      } catch { setOrbState('idle'); setVoiceLabel('辨識失敗，請再試', 'stt'); setTimeout(()=>setVoiceLabel('','idle'),2500); }
     };
     mediaRecorder.start();
     setTimeout(() => mediaRecorder?.state==='recording' && mediaRecorder.stop(), 10000);
   } catch {
     isRecording = false; setOrbState('idle');
-    setVoiceLabel('無法存取麥克風', 'listen'); setTimeout(()=>setVoiceLabel(''),2500);
+    setVoiceLabel('無法存取麥克風', 'listen'); setTimeout(()=>setVoiceLabel('','idle'),2500);
   }
 }
 
@@ -1407,8 +1405,7 @@ async function sendMessage(text) {
   isLoading=true; sendBtn.disabled=true;
   showTyping();
   setOrbState('thinking');
-  greetingText.textContent='思考中…';
-  greetingSubtext.textContent='';
+  setVoiceLabel('AI 生成中', 'ai');
 
   try {
     const reply = await callGemini(q);
@@ -1424,16 +1421,14 @@ async function sendMessage(text) {
     appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。','bot',true);
     conversationHistory.pop();
     setOrbState('idle');
-    
+    setVoiceLabel('', 'idle');
   }
   isLoading=false; sendBtn.disabled=false;
 }
 
 function showComingSoon(name) {
-  const label = document.getElementById('voiceLabel');
-  label.textContent = name + ' 即將推出';
-  label.style.opacity = '1';
-  setTimeout(() => { label.textContent = ''; label.style.opacity = '0'; }, 2000);
+  setVoiceLabel(name + ' 即將推出', 'idle');
+  setTimeout(() => setVoiceLabel('', 'idle'), 2000);
 }
 
 function askChip(btn) { forceUnlockAudio().catch(()=>{}).then(() => sendMessage(btn.textContent)); }
