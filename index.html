@@ -1104,13 +1104,11 @@ let audioUnlocked = false;
 async function unlockAudio() {
   if (audioUnlocked) return;
   try {
-    // Unlock the shared AudioContext on first user gesture
-    const ctx = getAudioCtx();
-    await ctx.resume();
+    const ctx = new AudioContext();
     const buf = ctx.createBuffer(1,1,22050);
     const src = ctx.createBufferSource();
     src.buffer = buf; src.connect(ctx.destination); src.start(0);
-    audioUnlocked = true;
+    await ctx.resume(); audioUnlocked = true;
   } catch(e){}
 }
 document.addEventListener('touchstart', unlockAudio, {once:true,passive:true});
@@ -1202,23 +1200,11 @@ async function callGemini(userMessage) {
   return reply;
 }
 
-// Shared AudioContext for iOS compatibility
-let sharedAudioCtx = null;
-let currentAudioSource = null;
-
-function getAudioCtx() {
-  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
-    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return sharedAudioCtx;
-}
+let currentAudio = null;
+let pendingSpeech = null;
 
 async function speakText(text) {
-  // Stop current audio
-  if (currentAudioSource) {
-    try { currentAudioSource.stop(); } catch(e) {}
-    currentAudioSource = null;
-  }
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   setOrbState('speaking');
   setVoiceLabel('說話中…');
   try {
@@ -1227,40 +1213,43 @@ async function speakText(text) {
       body: JSON.stringify({text})
     });
     if (!res.ok) throw new Error('TTS failed');
-    const arrayBuf = await res.arrayBuffer();
-
-    // Use shared AudioContext - iOS allows playback if context was created during user gesture
-    const ctx = getAudioCtx();
-    if (ctx.state === 'suspended') await ctx.resume();
-
-    const audioBuf = await ctx.decodeAudioData(arrayBuf);
-    const source = ctx.createBufferSource();
-    source.buffer = audioBuf;
-    source.connect(ctx.destination);
-    currentAudioSource = source;
-
-    source.onended = () => {
-      currentAudioSource = null;
-      setOrbState('idle');
-      setVoiceLabel('');
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    currentAudio.onended = () => {
+      setOrbState('idle'); setVoiceLabel('');
       greetingText.textContent = 'Gotour AI 智慧小助手';
       greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔';
     };
-    source.start(0);
-
-  } catch(e) {
-    console.error('TTS error:', e);
-    setOrbState('idle');
-    setVoiceLabel('');
-  }
+    currentAudio.onerror = () => { setOrbState('idle'); setVoiceLabel(''); };
+    const p = currentAudio.play();
+    if (p !== undefined) {
+      p.catch(() => {
+        setOrbState('idle');
+        setVoiceLabel('點球球聽回答');
+        pendingSpeech = url;
+      });
+    }
+  } catch(e) { setOrbState('idle'); setVoiceLabel(''); }
 }
 
 async function toggleRecording() {
   await unlockAudio();
 
-  // Resume AudioContext on tap (iOS)
-  const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') ctx.resume();
+  await unlockAudio();
+
+  // iOS pending speech
+  if (pendingSpeech) {
+    const url = pendingSpeech; pendingSpeech = null;
+    setVoiceLabel('');
+    currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    setOrbState('speaking');
+    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); };
+    currentAudio.play().catch(()=>{});
+    return;
+  }
 
   if (isLoading) return;
 
