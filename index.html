@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>臺史博 AI 問答助理</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #1a1a1a;
+    --surface2: #232323;
+    --border: #2e2e2e;
+    --accent: #c9a96e;
+    --accent-dim: rgba(201,169,110,0.12);
+    --text: #e8e2d9;
+    --text-muted: #888;
+    --text-dim: #444;
+    --user-bubble: #1a2a1a;
+    --user-border: #253525;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-weight: 300;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Header */
+  .header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .logo-mark {
+    width: 34px; height: 34px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Noto Serif TC', serif;
+    font-size: 15px; color: #0e0e0e; font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .header-text h1 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 14px; font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .header-text p {
+    font-size: 10px; color: var(--text-muted);
+    margin-top: 2px; letter-spacing: 0.08em;
+  }
+
+  .header-right {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .api-key-wrap {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .api-key-wrap input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    width: 220px;
+    outline: none;
+  }
+  .api-key-wrap input:focus { border-color: var(--accent); }
+  .api-key-wrap input::placeholder { color: var(--text-dim); }
+
+  .save-key-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .save-key-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+
+  .status-dot {
+    width: 7px; height: 7px;
+    background: #4caf82; border-radius: 50%;
+    box-shadow: 0 0 6px rgba(76,175,130,0.6);
+    animation: pulse 2.5s ease-in-out infinite;
+  }
+  .status-dot.offline { background: #888; box-shadow: none; animation: none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* Suggestions */
+  .suggestions {
+    padding: 14px 20px 0;
+    display: flex; flex-wrap: wrap; gap: 7px;
+    flex-shrink: 0;
+  }
+  .suggest-label {
+    width: 100%; font-size: 10px;
+    color: var(--text-dim); letter-spacing: 0.1em; margin-bottom: 2px;
+  }
+  .suggestion-btn {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text-muted); font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px; padding: 6px 12px; border-radius: 20px;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap; font-weight: 300;
+  }
+  .suggestion-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  /* Chat area */
+  .chat-area {
+    flex: 1; overflow-y: auto;
+    padding: 20px; display: flex; flex-direction: column; gap: 18px;
+    scroll-behavior: smooth;
+  }
+  .chat-area::-webkit-scrollbar { width: 3px; }
+  .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* Welcome */
+  .welcome {
+    text-align: center; padding: 28px 16px;
+  }
+  .welcome-icon { font-size: 28px; margin-bottom: 12px; opacity: 0.8; }
+  .welcome h2 {
+    font-family: 'Noto Serif TC', serif;
+    font-size: 17px; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.05em;
+  }
+  .welcome p { font-size: 12px; color: var(--text-muted); line-height: 1.9; max-width: 300px; margin: 0 auto; }
+  .welcome-divider { width: 36px; height: 1px; background: var(--accent); margin: 14px auto; opacity: 0.4; }
+
+  .api-notice {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-top: 14px;
+    font-size: 11px; color: var(--text-muted); line-height: 1.8;
+    max-width: 340px; margin-left: auto; margin-right: auto;
+  }
+  .api-notice b { color: var(--accent); font-weight: 400; }
+
+  /* Messages */
+  .msg { display: flex; gap: 10px; animation: fadeUp 0.25s ease; }
+  .msg.user { flex-direction: row-reverse; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .avatar {
+    width: 28px; height: 28px; border-radius: 6px;
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; margin-top: 2px;
+  }
+  .avatar.bot { background: var(--accent); color: #0e0e0e; font-family: 'Noto Serif TC', serif; }
+  .avatar.user { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+
+  .bubble {
+    max-width: 78%; padding: 12px 15px;
+    font-size: 13.5px; line-height: 1.85; font-weight: 300;
+    border-radius: 12px;
+  }
+  .bubble.bot {
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--text); border-top-left-radius: 3px;
+  }
+  .bubble.user {
+    background: var(--user-bubble); border: 1px solid var(--user-border);
+    color: var(--text); border-top-right-radius: 3px;
+  }
+  .bubble.error {
+    background: rgba(180,60,60,0.12);
+    border: 1px solid rgba(180,60,60,0.25);
+    color: #e0a0a0;
+  }
+
+  .source-tag {
+    display: inline-block; margin-top: 9px;
+    font-size: 10px; color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(201,169,110,0.2);
+    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.04em;
+  }
+
+  /* Typing */
+  .typing { display: flex; gap: 10px; align-items: flex-start; }
+  .typing-dots {
+    background: var(--surface); border: 1px solid var(--border);
+    border-top-left-radius: 3px; border-radius: 12px;
+    padding: 13px 16px; display: flex; gap: 5px; align-items: center;
+  }
+  .typing-dots span {
+    width: 5px; height: 5px; background: var(--text-muted);
+    border-radius: 50%; animation: bounce 1.2s ease-in-out infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+
+  /* Input */
+  .input-area {
+    padding: 14px 18px 18px;
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .input-wrap {
+    display: flex; gap: 10px; align-items: flex-end;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 12px;
+    transition: border-color 0.2s;
+  }
+  .input-wrap:focus-within { border-color: rgba(201,169,110,0.5); }
+
+  textarea {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: 'Noto Sans TC', sans-serif;
+    font-size: 13.5px; font-weight: 300; resize: none;
+    line-height: 1.6; max-height: 100px; min-height: 22px; padding: 0;
+  }
+  textarea::placeholder { color: var(--text-dim); }
+
+  .send-btn {
+    width: 32px; height: 32px; background: var(--accent); border: none;
+    border-radius: 8px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; flex-shrink: 0;
+    transition: opacity 0.2s;
+  }
+  .send-btn:hover { opacity: 0.82; }
+  .send-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+  .send-btn svg { width: 15px; height: 15px; fill: #0e0e0e; }
+
+  .input-footer {
+    text-align: center; font-size: 10px; color: var(--text-dim);
+    margin-top: 8px; letter-spacing: 0.05em;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-mark">史</div>
+  <div class="header-text">
+    <h1>臺史博 AI 問答助理</h1>
+    <p>國立臺灣歷史博物館 · POWERED BY ARTOGO</p>
+  </div>
+  <div class="header-right">
+    <div class="api-key-wrap">
+      <input type="password" id="apiKeyInput" placeholder="貼上 Gemini API Key 以啟用 AI 模式">
+      <button class="save-key-btn" onclick="saveKey()">啟用</button>
+    </div>
+    <div class="status-dot offline" id="statusDot"></div>
+  </div>
+</div>
+
+<div class="suggestions" id="suggestions">
+  <div class="suggest-label">常見問題</div>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">幾點開館？</button>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">票價是多少？</button>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">現在有哪些特展？</button>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">怎麼搭公車來？</button>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">可以帶寵物嗎？</button>
+  <button class="suggestion-btn" onclick="askSuggestion(this)">停車要多少錢？</button>
+</div>
+
+<div class="chat-area" id="chatArea">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">🏛</div>
+    <div class="welcome-divider"></div>
+    <h2>你好，我是臺史博的 AI 助理</h2>
+    <p>有關參觀資訊、展覽內容、交通票價等問題，都可以問我。我只會根據館方提供的資料回答。</p>
+    <div class="api-notice">
+      <b>請先輸入 Gemini API Key 啟用 AI 模式</b><br>
+      啟用後支援：對話記憶、語意理解、反問釐清<br>
+      未啟用時使用關鍵字比對（較不靈活）
+    </div>
+  </div>
+</div>
+
+<div class="input-area">
+  <div class="input-wrap">
+    <textarea id="userInput" placeholder="請輸入您的問題..." rows="1"
+      onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="input-footer">回答內容以館方正式公告為準 · 如有疑問請洽 06-356-8889</div>
+</div>
+
+<script>
+// ── Knowledge Base ──────────────────────────────────────────────
+const KB = [
+  { id:"hours_001", category:"開放時間", q:"博物館幾點開館？幾點關門？", a:"開館時間為週二至週日 09:00–17:00，最後入場時間為 16:30。" },
+  { id:"hours_002", category:"開放時間", q:"博物館什麼時候休館？", a:"每週一休館（逢國定假日照常開館，連續假日結束後一日休館）。農曆除夕及大年初一、政府公告之天然災害停止上班日亦休館。" },
+  { id:"hours_003", category:"開放時間", q:"2026年哪些週一有開館？", a:"115年度（2026年）特別開館的週一：4/6、5/18、9/28、10/26。" },
+  { id:"hours_004", category:"開放時間", q:"2026年特別休館日？", a:"115年度（2026年）特別休館日：2/16、2/17、4/7、5/19、9/29、10/27。8/31–9/7 閉館維修。" },
+  { id:"fac_001", category:"設施", q:"湖畔圖書館幾點開放？", a:"湖畔圖書館開放時間為 09:00–17:00（開館日）。" },
+  { id:"fac_002", category:"設施", q:"臺灣歷史公園幾點開放？", a:"臺灣歷史公園園區每日 05:00–22:00 開放，全年無休。" },
+  { id:"fac_003", category:"設施", q:"停車場幾點開放？", a:"遊客停車場全年無休，全天開放。" },
+  { id:"vr_001", category:"VR再現製造所", q:"VR再現製造所有哪些節目？場次？", a:"目前有兩部VR：\n1.《hongu' Utax彩虹》2/3–7/5，每週二、四、六，場次09:30、10:15、11:00、14:00、14:45、15:30。\n2.《重返第一法庭．噍吧哖世紀大審判》2/3–7/5，每週三、五、日，同場次。\n片長約17分鐘，座位5席+1席無障礙。" },
+  { id:"ticket_001", category:"票價", q:"門票多少錢？", a:"個人票價：\n・全票 NT$100（一般觀眾）\n・優待票 NT$50（學生、6–12歲兒童、65歲以上長者假日、持敬老卡假日）\n・免票：未滿6歲兒童、65歲以上長者平日、身心障礙人士及必要陪同者1人、持相關證件者。" },
+  { id:"ticket_002", category:"票價", q:"小孩要買票嗎？兒童票價？", a:"未滿6歲免費。6歲以上未滿12歲優待票 NT$50。" },
+  { id:"ticket_003", category:"票價", q:"65歲以上長者票價？", a:"65歲以上本國籍長者：平日免票，假日優待票 NT$50。持敬老卡者同規定。" },
+  { id:"ticket_004", category:"票價", q:"身心障礙者要買票嗎？", a:"身心障礙人士及必要陪同者1人免票，請出示相關證件。" },
+  { id:"ticket_005", category:"票價", q:"學生票多少錢？", a:"個人學生優待票 NT$50。學生團體（10人以上）NT$60/人，含語音導覽機。" },
+  { id:"ticket_006", category:"票價優惠", q:"有什麼特殊優惠活動？", a:"2026年特殊優惠：\n・兒童節（4/3–4/6）：12歲以下免票\n・國際博物館日（5/16–5/18）：全館免票\n・原住民族日（8/1–8/2）：原住民族憑證明免票\n・國慶日（10/9–10/11）：全館優待票 NT$50\n・臺灣文化日（10/17）：全館免票" },
+  { id:"ticket_007", category:"退票", q:"票可以退嗎？", a:"未使用票券可於購買當日閉館30分鐘前至售票中心退票，免手續費。一經使用恕不退票。" },
+  { id:"ticket_008", category:"票價優惠", q:"有雙人套票嗎？語音導覽優惠？", a:"「門票＋語音導覽雙人套組」：2人 NT$325（原價 NT$500），現場售票中心購買，優惠至116.12.10止。" },
+  { id:"rules_001", category:"參觀須知", q:"可以帶食物飲料進展場嗎？", a:"禁止攜帶食物、飲料進入展場，不得飲食、嚼食口香糖或吸菸。例外：飲水區可飲白開水，哺乳室可哺乳。" },
+  { id:"rules_002", category:"參觀須知", q:"可以帶寵物進博物館嗎？", a:"展示教育大樓內禁止攜帶寵物（合格工作犬除外）。戶外園區可帶寵物，但須繫鏈或置於寵物籃，並自行清理排泄物，禁止在園區進行寵物訓練。違規者館方得予以制止或要求離場。" },
+  { id:"rules_003", category:"參觀須知", q:"可以拍照嗎？可以用腳架閃光燈？", a:"一般拍照可以，但禁止自拍棒、腳架、閃光燈、補光燈。標示禁拍區域嚴禁任何拍照或錄影。展場內不得直播，商業攝影需事先取得館方許可。" },
+  { id:"rules_004", category:"參觀須知", q:"可以帶嬰兒車輪椅進去嗎？", a:"嬰兒車及輪椅可進入展場，滑板、溜冰等禁止。" },
+  { id:"rules_005", category:"參觀須知", q:"有寄物服務嗎？", a:"展場設有寄物櫃，寄存物品限當日取回，館方不負保管責任。大型行李不得攜入展覽區域。" },
+  { id:"rules_006", category:"參觀須知", q:"小孩可以單獨參觀嗎？", a:"6歲以下幼童需成人陪同。6至12歲建議成人陪同。" },
+  { id:"rules_007", category:"參觀須知", q:"戶外園區可以騎車嗎？可以開車嗎？", a:"腳踏車可進入但禁止競速，請使用自行車道。各式機動車輛禁止駛入（電動輪椅除外）。停車場汽車 NT$50/次，機車免費。" },
+  { id:"rules_008", category:"參觀須知", q:"可以吸菸嗎？", a:"戶外園區設有吸菸區，其餘全區禁菸。展示教育大樓全面禁菸。" },
+  { id:"rules_009", category:"參觀須知", q:"可以放無人機嗎？", a:"禁止操作遙控無人機、遙控船、大型風箏等。一般風箏高度不得超過60公尺。" },
+  { id:"transport_001", category:"交通", q:"博物館地址在哪？", a:"地址：709025 臺南市安南區長和路一段250號。" },
+  { id:"transport_002", category:"交通", q:"開車怎麼去？", a:"國道1號→永康交流道→中正北路→永安路→長和路→過東和橋（約15分鐘）。\n或從台南火車站→西門路→中正南北路→永安路→過東和橋（約30分鐘）。" },
+  { id:"transport_003", category:"交通", q:"搭高鐵怎麼去？", a:"高鐵台南站後：\n1. 搭計程車直達（約35分）\n2. 轉臺鐵沙崙線→台南站→搭5或18路公車至和順轉運站→步行5分\n3. 轉臺鐵沙崙線→永康站→搭20或905路至和順轉運站→步行5分" },
+  { id:"transport_004", category:"交通", q:"搭火車怎麼去？從台南站或永康站？", a:"從台南站：搭計程車約25分，或搭5、18路公車至和順轉運站步行5分（約60分）。\n從永康站：搭計程車約15分，或搭20、905路至和順轉運站步行5分（約25分）。" },
+  { id:"transport_005", category:"交通", q:"有哪些公車可以到？", a:"到「和順轉運站」後步行約5分鐘：\n・5路：台南火車站→和順\n・18路：台南轉運站→和順\n・20路：永康火車站→和順\n・905路：永康轉運站→和順" },
+  { id:"transport_006", category:"交通", q:"有YouBike嗎？", a:"YouBike站點位於長和路一段與館前一路口。大樓售票中心旁設有公共自行車架。" },
+  { id:"parking_001", category:"停車", q:"停車費多少？怎麼收費？", a:"小客車 NT$50/次，大客車 NT$150/次，機車免費。電動車慢充每度 NT$8。請離館前至自動繳費機繳費。" },
+  { id:"parking_002", category:"停車", q:"身心障礙者停車優惠？", a:"駕駛或乘客為身心障礙者，憑手冊及停車位識別證正本至出口收費亭，享半價 NT$25（服務時間 08:30–17:30）。" },
+  { id:"exhibit_001", category:"特展", q:"現在有哪些特展？", a:"目前三檔特展：\n1.《地方記憶・遊牧》2026/2/10–5/31，1樓大廳\n2.《轉機：臺灣女子移動紀事》2025/12/23–2026/8/30，4樓第1特展室\n3.《開箱吧！臺史博館藏桌遊》2025/6/3–2026/4/26，4樓第3特展室" },
+  { id:"exhibit_002", category:"特展", q:"轉機特展是什麼？", a:"《轉機：臺灣女子移動紀事》展期至2026/8/30，4樓第1特展室。以「移動」為關鍵字，回顧百年臺灣女性如何突破制度框架，涵蓋纏足、養女制度、月經禁忌等議題，展線分「國內線」與「國際線」兩條路徑。" },
+  { id:"exhibit_003", category:"特展", q:"桌遊特展是什麼？", a:"《開箱吧！臺史博館藏桌遊》展期至2026/4/26，4樓第3特展室。展出臺史博收藏的歷代桌上遊戲，呈現各時代的生活樣貌與思維觀點。" },
+  { id:"perm_001", category:"常設展", q:"常設展叫什麼名字？", a:"常設展《斯土斯民：臺灣的故事》，從史前到當代，共7大單元：臺灣交會之島、最初的抵岸、倚海而生的島與人、山海之間的共存與競逐、新秩序下的苦悶與夢想、走向民主這條路、大家的博物館。" },
+  { id:"contact_001", category:"聯絡", q:"博物館電話是？", a:"電話：06-356-8889\n傳真：06-356-4981\n無障礙服務專線：06-356-8889 分機 8103" }
+];
+
+const KB_TEXT = KB.map(e => `【${e.category}】${e.q}\n${e.a}`).join('\n\n');
+
+const SYSTEM_PROMPT = `你是國立臺灣歷史博物館（臺史博）的 AI 問答助理，名字叫「臺史博助理」。
+
+你的任務：根據以下館方知識庫回答訪客問題。
+
+【重要規則】
+1. 只能根據知識庫內容回答，不可自行推測或添加知識庫以外的資訊
+2. 若問題在知識庫中找不到答案，請誠實說「我目前的資料沒有這個資訊」，並建議聯繫館方（06-356-8889）
+3. 若訪客問題太簡略或模糊，請主動反問釐清，例如：使用者說「貓」你可以問「請問您是想詢問能否攜帶寵物入館嗎？」
+4. 你有完整的對話記憶，請根據上下文理解使用者的真實意圖
+5. 若使用者問「會罰錢嗎？」「會怎樣？」等承接上文的問題，請根據上下文判斷他們在問什麼
+6. 語氣親切、簡潔，使用繁體中文，避免過度正式
+
+【知識庫】
+${KB_TEXT}`;
+
+// ── State ──────────────────────────────────────────────────────
+let apiKey = '';
+let conversationHistory = [];
+let isLoading = false;
+
+const chatArea = document.getElementById('chatArea');
+const userInput = document.getElementById('userInput');
+const sendBtn = document.getElementById('sendBtn');
+const statusDot = document.getElementById('statusDot');
+
+// ── API Key ────────────────────────────────────────────────────
+function saveKey() {
+  const val = document.getElementById('apiKeyInput').value.trim();
+  if (val.length < 10) {
+    alert('請輸入有效的 Gemini API Key');
+    return;
+  }
+  apiKey = val;
+  statusDot.classList.remove('offline');
+  document.getElementById('apiKeyInput').value = '●'.repeat(20);
+  document.getElementById('apiKeyInput').disabled = true;
+  document.querySelector('.save-key-btn').textContent = '已啟用';
+  document.querySelector('.save-key-btn').style.color = '#4caf82';
+
+  // Update API notice
+  const notice = document.querySelector('.api-notice');
+  if (notice) {
+    notice.innerHTML = '<b style="color:#4caf82">✓ AI 模式已啟用</b><br>支援對話記憶、語意理解、反問釐清';
+  }
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function removeWelcome() {
+  const w = document.getElementById('welcome');
+  if (w) w.remove();
+  document.getElementById('suggestions').style.display = 'none';
+}
+
+function appendMsg(text, role, isError = false) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${role}`;
+  avatar.textContent = role === 'bot' ? '史' : '我';
+
+  const bubble = document.createElement('div');
+  bubble.className = `bubble ${role}${isError ? ' error' : ''}`;
+  bubble.style.whiteSpace = 'pre-line';
+  bubble.textContent = text;
+
+  if (role === 'bot' && !isError) {
+    const tag = document.createElement('div');
+    tag.className = 'source-tag';
+    tag.textContent = apiKey ? '✓ Gemini AI 語意理解 · 臺史博資料庫' : '✓ 資料來源：臺史博官方資訊';
+    bubble.appendChild(document.createElement('br'));
+    bubble.appendChild(tag);
+  }
+
+  div.appendChild(avatar);
+  div.appendChild(bubble);
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function showTyping() {
+  const div = document.createElement('div');
+  div.className = 'typing'; div.id = 'typingIndicator';
+  const av = document.createElement('div');
+  av.className = 'avatar bot'; av.textContent = '史';
+  const dots = document.createElement('div');
+  dots.className = 'typing-dots';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+  div.appendChild(av); div.appendChild(dots);
+  chatArea.appendChild(div);
+  chatArea.scrollTop = chatArea.scrollHeight;
+}
+
+function hideTyping() {
+  const t = document.getElementById('typingIndicator');
+  if (t) t.remove();
+}
+
+// ── Fallback keyword search ────────────────────────────────────
+function keywordSearch(question) {
+  const q = question.toLowerCase();
+  let best = null; let bestScore = 0;
+  for (const entry of KB) {
+    let score = 0;
+    const allText = (entry.q + entry.a + entry.category).toLowerCase();
+    const words = q.replace(/[？?！!。，,]/g, ' ').split(/\s+/).filter(w => w.length >= 2);
+    for (const word of words) {
+      if (allText.includes(word)) score += word.length * 2;
+      if (entry.q.toLowerCase().includes(word)) score += 4;
+    }
+    if (q.includes('停車')) { if (entry.category === '停車') score += 15; }
+    if (q.includes('寵物') || q.includes('狗') || q.includes('貓')) { if (entry.id === 'rules_002') score += 20; }
+    if (q.includes('拍照') || q.includes('閃光')) { if (entry.id === 'rules_003') score += 20; }
+    if (q.includes('開館') || q.includes('幾點')) { if (entry.category === '開放時間') score += 10; }
+    if (q.includes('票') && !q.includes('停車')) { if (entry.category === '票價' || entry.category === '票價優惠') score += 8; }
+    if (score > bestScore) { bestScore = score; best = entry; }
+  }
+  return bestScore >= 4 ? best : null;
+}
+
+// ── Gemini API call ────────────────────────────────────────────
+async function callClaude(userMessage) {
+  conversationHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+      contents: conversationHistory,
+      generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error?.message || `API 錯誤 ${response.status}`);
+  }
+
+  const data = await response.json();
+  const reply = data.candidates[0].content.parts[0].text;
+  conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+  return reply;
+}
+
+// ── Send message ───────────────────────────────────────────────
+async function sendMessage(text) {
+  const question = text || userInput.value.trim();
+  if (!question || isLoading) return;
+
+  removeWelcome();
+  appendMsg(question, 'user');
+  userInput.value = '';
+  autoResize(userInput);
+  isLoading = true;
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    let reply;
+
+    if (apiKey) {
+      // ── AI mode: Claude with memory ──
+      reply = await callClaude(question);
+    } else {
+      // ── Fallback: keyword search ──
+      await new Promise(r => setTimeout(r, 700 + Math.random() * 400));
+      const result = keywordSearch(question);
+      if (result) {
+        reply = result.a;
+      } else {
+        reply = '很抱歉，我目前的資料中找不到這個問題的答案。\n\n建議您直接聯繫館方：\n・電話：06-356-8889\n・或至服務台詢問館內人員\n\n（提示：輸入 API Key 啟用 AI 模式可支援更靈活的對話）';
+      }
+    }
+
+    hideTyping();
+    appendMsg(reply, 'bot');
+  } catch (err) {
+    hideTyping();
+    appendMsg(`連線錯誤：${err.message}\n\n請確認 API Key 是否正確，或稍後再試。`, 'bot', true);
+    conversationHistory.pop(); // remove failed user message (Gemini format)
+  }
+
+  isLoading = false;
+  sendBtn.disabled = false;
+  userInput.focus();
+}
+
+function askSuggestion(btn) { sendMessage(btn.textContent); }
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+</script>
+</body>
+</html>
