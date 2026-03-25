@@ -382,6 +382,13 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
 }
 @keyframes ab3spin { to { --a3: 480deg } }
 
+.museum-name {
+  font-size: 10px;
+  font-weight: 300;
+  color: rgba(200,240,255,0.45);
+  letter-spacing: 0.14em;
+  font-family: 'Noto Serif TC', serif;
+}
 </style>
 </head>
 <body>
@@ -1050,8 +1057,6 @@ async function toggleRecording() {
         const text = data.DisplayText || '';
         setVoiceLabel('');
         if (text) {
-          openDrawer();
-          await new Promise(r=>setTimeout(r,200));
           sendMessage(text);
         } else {
           setOrbState('idle');
@@ -1115,7 +1120,7 @@ async function sendMessage(text) {
   isLoading=false; sendBtn.disabled=false;
 }
 
-function askChip(btn) { openDrawer(); setTimeout(()=>sendMessage(btn.textContent),150); }
+function askChip(btn) { sendMessage(btn.textContent); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
 
