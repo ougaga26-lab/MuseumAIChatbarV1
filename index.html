@@ -1059,13 +1059,6 @@ const KB = [
   { category:"參觀須知", q:"可以帶寵物嗎？", a:"展示教育大樓內禁止寵物（合格工作犬除外）。戶外園區可帶寵物，須繫鏈並自行清理排泄物。" },
   { category:"參觀須知", q:"可以拍照嗎？可以用閃光燈嗎？", a:"一般拍照可以，但禁止自拍棒、腳架、閃光燈、補光燈。標示禁拍區嚴禁拍照錄影。" },
   { category:"參觀須知", q:"有寄物服務嗎？", a:"展場設有寄物櫃，限當日取回，館方不負保管責任。" },
-  { category:"設施", q:"廁所在哪裡？洗手間在哪？", a:"各樓層均設有廁所，請參考館內指標或詢問服務人員。建議開啟園區地圖查看詳細位置。" },
-  { category:"設施", q:"哺乳室在哪裡？育嬰室在哪？", a:"館內設有哺乳室，位於各樓服務台附近，請詢問現場服務人員。" },
-  { category:"設施", q:"電梯在哪裡？無障礙設施在哪？", a:"展示教育大樓設有電梯與無障礙坡道，請依館內指標指示，或洽無障礙服務專線：06-356-8889 分機 8103。" },
-  { category:"設施", q:"服務台在哪裡？詢問台在哪？", a:"服務台位於展示教育大樓1樓入口大廳，開館時間均有服務人員。" },
-  { category:"設施", q:"餐廳在哪裡？有吃飯的地方嗎？咖啡廳在哪？", a:"館內目前設有輕食區，詳細位置請參考園區地圖或詢問服務台。展場內禁止飲食。" },
-  { category:"設施", q:"哪裡可以買紀念品？文創商店在哪？", a:"文創商品區位於展示教育大樓1樓，販售各式臺史博特色商品。" },
-  { category:"設施", q:"停車場入口在哪裡？怎麼開車進去？", a:"停車場入口請依園區外圍指標進入，建議開啟園區地圖確認位置。小客車停車費 NT$50/次，機車免費。" },
   { category:"交通", q:"博物館地址在哪？", a:"地址：709025 臺南市安南區長和路一段250號。" },
   { category:"交通", q:"搭高鐵怎麼去？", a:"高鐵台南站後：\n1. 搭計程車直達（約35分）\n2. 轉臺鐵→台南站→搭5或18路至和順轉運站步行5分\n3. 轉臺鐵→永康站→搭20或905路至和順轉運站步行5分" },
   { category:"交通", q:"搭火車怎麼去？", a:"從台南站：計程車約25分，或搭5、18路至和順步行5分（約60分）。\n從永康站：計程車約15分，或搭20、905路至和順步行5分（約25分）。" },
@@ -1200,9 +1193,6 @@ async function callGemini(userMessage) {
   return reply;
 }
 
-let currentAudio = null;
-let pendingSpeech = null;
-
 async function speakText(text) {
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   setOrbState('speaking');
@@ -1217,11 +1207,7 @@ async function speakText(text) {
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
     currentAudio.playsInline = true;
-    currentAudio.onended = () => {
-      setOrbState('idle'); setVoiceLabel('');
-      greetingText.textContent = 'Gotour AI 智慧小助手';
-      greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔';
-    };
+    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); greetingText.textContent = 'Gotour AI 智慧小助手'; greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔'; };
     currentAudio.onerror = () => { setOrbState('idle'); setVoiceLabel(''); };
     const p = currentAudio.play();
     if (p !== undefined) {
@@ -1235,8 +1221,6 @@ async function speakText(text) {
 }
 
 async function toggleRecording() {
-  await unlockAudio();
-
   await unlockAudio();
 
   // iOS pending speech
@@ -1334,7 +1318,9 @@ async function sendMessage(text) {
     greetingText.textContent='回答完成';
     greetingSubtext.textContent='點球球繼續說話';
 
-    speakText(finalReply);
+    // Intent detection - prepend context phrase if needed
+    const replyWithContext = buildReplyWithContext(reply);
+    speakText(replyWithContext);
   } catch(err) {
     hideTyping();
     appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。','bot',true);
@@ -1359,33 +1345,22 @@ function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.sc
 
 
 // ── Intent Detection ───────────────────────────────
-function buildReplyWithContext(question, reply) {
-  const q = question;
+function buildReplyWithContext(reply) {
   const r = reply;
+  const specificExhibit = ['地方記憶','遊牧','轉機：','轉機特展','臺灣女子','開箱吧','桌遊特展'];
+  const exhibitKeywords = ['特展','展覽','目前有','正在展出','展出中'];
+  const mapKeywords = ['在哪裡','哪一層','樓','停車','廁所','服務台','園區','位置','怎麼走','在哪'];
 
-  // Detect from USER QUESTION
-  const exhibitQ = ['展覽','特展','有什麼展','推薦','地方記憶','遊牧','轉機','開箱吧','桌遊','有哪些'];
-  const specificQ = ['地方記憶','遊牧','轉機','臺灣女子','開箱吧','桌遊特展'];
-  const mapQ = [
-    '廁所','洗手間','哺乳','育嬰','電梯','停車','服務台','詢問台','紀念品','文創',
-    '在哪','哪裡','幾樓','位置','怎麼走','地點','餐廳','咖啡','入口','出口','園區地圖'
-  ];
+  const hasSpecific = specificExhibit.some(k=>r.includes(k));
+  const hasExhibit = exhibitKeywords.some(k=>r.includes(k));
+  const hasMap = mapKeywords.some(k=>r.includes(k));
 
-  const hasSpecific = specificQ.some(k=>q.includes(k));
-  const hasExhibit  = exhibitQ.some(k=>q.includes(k));
-  const hasMap      = mapQ.some(k=>q.includes(k));
-
-  if (hasSpecific) {
-    const idx = ['轉機','臺灣女子'].some(k=>q.includes(k)) ? 0
-              : ['地方記憶','遊牧'].some(k=>q.includes(k)) ? 1
-              : ['開箱吧','桌遊'].some(k=>q.includes(k)) ? 2 : -1;
-    setTimeout(()=>{ openExhibitDrawer(); if(idx>=0) openExhibitDetail(idx); }, 900);
-    return reply + ' 我幫您開啟展覽資訊了，您可以參考。';
-  } else if (hasExhibit) {
-    setTimeout(()=>{ openExhibitDrawer(); }, 900);
-    return reply + ' 我幫您開啟展覽列表了，您可以參考。';
+  if (hasSpecific || hasExhibit) {
+    const prefix = hasSpecific ? '我幫您開啟展覽資訊了，您可以參考。' : '我幫您開啟展覽列表了，您可以參考。';
+    detectAndOpenDrawer(reply);
+    return reply + ' ' + prefix;
   } else if (hasMap) {
-    setTimeout(()=>{ openMapDrawer(); }, 900);
+    detectAndOpenDrawer(reply);
     return reply + ' 我馬上幫你開啟園區地圖。';
   }
   return reply;
