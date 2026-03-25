@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>臺史博 AI 問答助理</title>
+<title>臺史博 AI 語音問答助理</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Noto+Sans+TC:wght@300;400;500&display=swap');
 
@@ -253,6 +253,60 @@
     text-align: center; font-size: 10px; color: var(--text-dim);
     margin-top: 8px; letter-spacing: 0.05em;
   }
+
+  /* Azure key input */
+  .azure-key-wrap {
+    display: flex; gap: 6px; align-items: center;
+  }
+  .azure-key-wrap input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: 'Noto Sans TC', sans-serif;
+    font-size: 11px; padding: 5px 10px;
+    border-radius: 6px; width: 200px; outline: none;
+  }
+  .azure-key-wrap input:focus { border-color: #0078d4; }
+
+  /* Mic button */
+  .mic-btn {
+    width: 32px; height: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.2s;
+  }
+  .mic-btn:hover { border-color: var(--accent); }
+  .mic-btn.recording {
+    background: rgba(220,50,50,0.15);
+    border-color: #dc3232;
+    animation: micPulse 1s ease-in-out infinite;
+  }
+  .mic-btn svg { width: 15px; height: 15px; }
+  @keyframes micPulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(220,50,50,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(220,50,50,0); }
+  }
+
+  /* Speaking indicator */
+  .speaking-tag {
+    display: inline-block; margin-top: 8px;
+    font-size: 10px; color: #4caf82;
+    background: rgba(76,175,130,0.1);
+    border: 1px solid rgba(76,175,130,0.25);
+    padding: 3px 9px; border-radius: 20px; letter-spacing: 0.04em;
+    animation: speakFade 1.5s ease-in-out infinite;
+  }
+  @keyframes speakFade { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .voice-status {
+    font-size: 11px; color: var(--text-dim);
+    margin-left: 6px; transition: color 0.3s;
+  }
+  .voice-status.active { color: #4caf82; }
+  .voice-status.recording { color: #dc3232; }
+
 </style>
 </head>
 <body>
@@ -261,12 +315,17 @@
   <div class="logo-mark">史</div>
   <div class="header-text">
     <h1>臺史博 AI 問答助理</h1>
-    <p>國立臺灣歷史博物館 · POWERED BY ARTOGO</p>
+    <p>國立臺灣歷史博物館 · POWERED BY ARTOGO · 語音版</p>
   </div>
   <div class="header-right">
+    <div class="azure-key-wrap">
+      <input type="password" id="azureKeyInput" placeholder="Azure Speech Key">
+      <button class="save-key-btn" onclick="saveAzureKey()">啟用語音</button>
+    </div>
+    <span class="voice-status" id="voiceStatus">語音未啟用</span>
     <div class="api-key-wrap">
-      <input type="password" id="apiKeyInput" placeholder="貼上 Gemini API Key 以啟用 AI 模式">
-      <button class="save-key-btn" onclick="saveKey()">啟用</button>
+      <input type="password" id="apiKeyInput" placeholder="Gemini API Key">
+      <button class="save-key-btn" onclick="saveKey()">啟用 AI</button>
     </div>
     <div class="status-dot offline" id="statusDot"></div>
   </div>
@@ -300,6 +359,14 @@
   <div class="input-wrap">
     <textarea id="userInput" placeholder="請輸入您的問題..." rows="1"
       onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+    <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="按住說話">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted)">
+        <rect x="9" y="2" width="6" height="11" rx="3"/>
+        <path d="M5 10a7 7 0 0 0 14 0"/>
+        <line x1="12" y1="19" x2="12" y2="22"/>
+        <line x1="8" y1="22" x2="16" y2="22"/>
+      </svg>
+    </button>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">
       <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
     </button>
@@ -531,6 +598,7 @@ async function sendMessage(text) {
 
     hideTyping();
     appendMsg(reply, 'bot');
+    azureTTS(reply);
   } catch (err) {
     hideTyping();
     appendMsg(`連線錯誤：${err.message}\n\n請確認 API Key 是否正確，或稍後再試。`, 'bot', true);
@@ -546,6 +614,152 @@ function askSuggestion(btn) { sendMessage(btn.textContent); }
 
 function handleKey(e) {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+
+// ── Azure Speech Config ────────────────────────────────────────
+const AZURE_REGION = 'eastasia';
+const TTS_VOICE = 'zh-TW-YunJheNeural';
+let azureKey = '';
+let isRecording = false;
+let currentAudio = null;
+
+function saveAzureKey() {
+  const val = document.getElementById('azureKeyInput').value.trim();
+  if (val.length < 10) { alert('請輸入有效的 Azure Speech Key'); return; }
+  azureKey = val;
+  document.getElementById('azureKeyInput').value = '●'.repeat(20);
+  document.getElementById('azureKeyInput').disabled = true;
+  document.querySelector('.azure-key-wrap .save-key-btn').textContent = '語音已啟用';
+  document.querySelector('.azure-key-wrap .save-key-btn').style.color = '#4caf82';
+  const vs = document.getElementById('voiceStatus');
+  vs.textContent = '語音就緒';
+  vs.className = 'voice-status active';
+}
+
+// ── STT: Azure Speech to Text ──────────────────────────────────
+async function toggleRecording() {
+  if (!azureKey) { alert('請先輸入 Azure Speech Key 啟用語音功能'); return; }
+  if (isRecording) return;
+
+  const micBtn = document.getElementById('micBtn');
+  const vs = document.getElementById('voiceStatus');
+  isRecording = true;
+  micBtn.classList.add('recording');
+  vs.textContent = '聆聽中...';
+  vs.className = 'voice-status recording';
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+    const chunks = [];
+
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      micBtn.classList.remove('recording');
+      vs.textContent = '辨識中...';
+      isRecording = false;
+
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const wavBlob = await convertToWav(blob);
+      const text = await azureSTT(wavBlob);
+
+      if (text) {
+        document.getElementById('userInput').value = text;
+        vs.textContent = '語音就緒';
+        vs.className = 'voice-status active';
+        sendMessage();
+      } else {
+        vs.textContent = '未偵測到語音，請再試';
+        vs.className = 'voice-status';
+        setTimeout(() => { vs.textContent = '語音就緒'; vs.className = 'voice-status active'; }, 2000);
+      }
+    };
+
+    mediaRecorder.start();
+    // Auto stop after 8 seconds or on second click
+    micBtn.onclick = () => { mediaRecorder.stop(); micBtn.onclick = toggleRecording; };
+    setTimeout(() => { if (mediaRecorder.state === 'recording') mediaRecorder.stop(); }, 8000);
+
+  } catch (err) {
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    vs.textContent = '麥克風存取失敗';
+    vs.className = 'voice-status';
+    console.error(err);
+  }
+}
+
+async function convertToWav(webmBlob) {
+  const audioCtx = new AudioContext({ sampleRate: 16000 });
+  const arrayBuffer = await webmBlob.arrayBuffer();
+  const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+  const pcm = audioBuffer.getChannelData(0);
+  const wav = pcmToWav(pcm, 16000);
+  return new Blob([wav], { type: 'audio/wav' });
+}
+
+function pcmToWav(pcmData, sampleRate) {
+  const buffer = new ArrayBuffer(44 + pcmData.length * 2);
+  const view = new DataView(buffer);
+  const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + pcmData.length * 2, true);
+  writeStr(8, 'WAVE'); writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true); writeStr(36, 'data');
+  view.setUint32(40, pcmData.length * 2, true);
+  for (let i = 0; i < pcmData.length; i++) {
+    view.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcmData[i])) * 0x7FFF, true);
+  }
+  return buffer;
+}
+
+async function azureSTT(wavBlob) {
+  const url = `https://${AZURE_REGION}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1?language=zh-TW`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Ocp-Apim-Subscription-Key': azureKey,
+      'Content-Type': 'audio/wav; codecs=audio/pcm; samplerate=16000',
+    },
+    body: wavBlob
+  });
+  const data = await res.json();
+  return data.DisplayText || '';
+}
+
+// ── TTS: Azure Text to Speech ──────────────────────────────────
+async function azureTTS(text) {
+  if (!azureKey) return;
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+
+  const url = `https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`;
+  const ssml = `<speak version='1.0' xml:lang='zh-TW'>
+    <voice name='${TTS_VOICE}'>${text.replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</voice>
+  </speak>`;
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Ocp-Apim-Subscription-Key': azureKey,
+        'Content-Type': 'application/ssml+xml',
+        'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3',
+      },
+      body: ssml
+    });
+
+    const audioBlob = await res.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    currentAudio = new Audio(audioUrl);
+    currentAudio.play();
+  } catch (err) {
+    console.error('TTS error:', err);
+  }
 }
 
 function autoResize(el) {
