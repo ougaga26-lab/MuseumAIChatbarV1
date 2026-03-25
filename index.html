@@ -1518,14 +1518,6 @@ function showIOSSilentWarning() {
   setTimeout(dismiss, 5000);
 }
 
-// ── BGM ────────────────────────────────────────────
-function startBGM() {
-  const bgm = document.getElementById('bgm');
-  if (!bgm || bgm._started) return;
-  bgm.play().catch(()=>{});
-  bgm._started = true;
-}
-
 // ── Map ────────────────────────────────────────────
 function openMapDrawer(){document.getElementById('mapDrawer').classList.add('open');document.getElementById('mapOverlay').classList.add('open');}
 function closeMapDrawer(){document.getElementById('mapDrawer').classList.remove('open');document.getElementById('mapOverlay').classList.remove('open');}
@@ -1618,15 +1610,7 @@ function showComingSoon(name){const l=document.getElementById('voiceLabel');l.te
 window.addEventListener('DOMContentLoaded', function(){
   initOrb();
   showIOSSilentWarning();
-  // Auto-play BGM on first interaction
-  document.addEventListener("touchstart", function tryBGM() {
-    startBGM();
-    document.removeEventListener("touchstart", tryBGM);
-  }, {once:true, passive:true});
-  document.addEventListener("click", function tryBGM() {
-    startBGM();
-    document.removeEventListener("click", tryBGM);
-  }, {once:true});
+
 
   // ── Proper audio unlock on all user gesture entry points ──
   // Send button
@@ -1671,9 +1655,6 @@ window.addEventListener('DOMContentLoaded', function(){
 });
 
 </script>
-
-<!-- BGM -->
-<audio id="bgm" src="https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/BGM.mp3" loop preload="auto" style="display:none"></audio>
 
 </body>
 </html>
