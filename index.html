@@ -956,7 +956,7 @@ function initOrb() {
   });
 
   // Click on canvas = toggle recording
-  canvas.addEventListener('click', async () => { await resumeAudioCtx(); toggleRecording(); });
+  canvas.addEventListener('click', () => toggleRecording());
 
   animateOrb();
 }
@@ -1096,23 +1096,24 @@ let conversationHistory = [];
 let isLoading = false;
 let isRecording = false;
 let mediaRecorder = null;
+let currentAudio = null;
 let hasMessages = false;
+let pendingSpeech = null;
+let audioUnlocked = false;
 
-// ── Shared AudioContext ─────────────────────────────
-let sharedAudioCtx = null;
-let currentSource = null;
-
-function getAudioCtx() {
-  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
-    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-  return sharedAudioCtx;
+// iOS audio unlock
+async function unlockAudio() {
+  if (audioUnlocked) return;
+  try {
+    const ctx = new AudioContext();
+    const buf = ctx.createBuffer(1,1,22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf; src.connect(ctx.destination); src.start(0);
+    await ctx.resume(); audioUnlocked = true;
+  } catch(e){}
 }
-async function resumeAudioCtx() {
-  const ctx = getAudioCtx();
-  if (ctx.state !== 'running') await ctx.resume();
-  return ctx;
-}
+document.addEventListener('touchstart', unlockAudio, {once:true,passive:true});
+document.addEventListener('click', unlockAudio, {once:true,passive:true});
 
 // DOM refs
 const voiceLabel = document.getElementById('voiceLabel');
@@ -1201,40 +1202,47 @@ async function callGemini(userMessage) {
 }
 
 async function speakText(text) {
-  if (currentSource) {
-    try { currentSource.stop(); } catch(e) {}
-    currentSource = null;
-  }
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   setOrbState('speaking');
   setVoiceLabel('說話中…');
   try {
-    const ctx = await resumeAudioCtx();
     const res = await fetch(`${WORKER}/tts`, {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({text})
     });
     if (!res.ok) throw new Error('TTS failed');
-    const arrayBuf = await res.arrayBuffer();
-    const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
-    const source = ctx.createBufferSource();
-    source.buffer = audioBuf;
-    source.connect(ctx.destination);
-    currentSource = source;
-    source.onended = () => {
-      if (currentSource === source) currentSource = null;
-      setOrbState('idle'); setVoiceLabel('');
-      greetingText.textContent = 'Gotour AI 智慧小助手';
-      greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
-    };
-    source.start(0);
-  } catch(e) {
-    console.error('TTS error:', e);
-    setOrbState('idle'); setVoiceLabel('');
-  }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); greetingText.textContent = 'Gotour AI 智慧小助手'; greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔'; };
+    currentAudio.onerror = () => { setOrbState('idle'); setVoiceLabel(''); };
+    const p = currentAudio.play();
+    if (p !== undefined) {
+      p.catch(() => {
+        setOrbState('idle');
+        setVoiceLabel('點球球聽回答');
+        pendingSpeech = url;
+      });
+    }
+  } catch(e) { setOrbState('idle'); setVoiceLabel(''); }
 }
 
 async function toggleRecording() {
-  await resumeAudioCtx();
+  await unlockAudio();
+
+  // iOS pending speech
+  if (pendingSpeech) {
+    const url = pendingSpeech; pendingSpeech = null;
+    setVoiceLabel('');
+    currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    setOrbState('speaking');
+    currentAudio.onended = () => { setOrbState('idle'); setVoiceLabel(''); };
+    currentAudio.play().catch(()=>{});
+    return;
+  }
+
   if (isLoading) return;
 
   if (isRecording) {
@@ -1245,7 +1253,7 @@ async function toggleRecording() {
   isRecording = true;
   setOrbState('listening');
   setVoiceLabel('聆聽中… 再點停止');
-  if (currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
+  if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio:true});
@@ -1306,7 +1314,6 @@ async function sendMessage(text) {
   appendMsg(q,'user');
   userInput.value=''; autoResize(userInput);
   isLoading=true; sendBtn.disabled=true;
-  resumeAudioCtx();
   showTyping();
   setOrbState('thinking');
   greetingText.textContent='思考中…';
