@@ -1104,14 +1104,14 @@ let audioUnlocked = false;
 async function unlockAudio() {
   if (audioUnlocked) return;
   try {
-    // Unlock the shared AudioContext on first user gesture
-    const ctx = getAudioCtx();
-    await ctx.resume();
-    const buf = ctx.createBuffer(1,1,22050);
+    const ctx = await _resumeCtx();
+    // Play silent buffer to fully unlock on iOS
+    const buf = ctx.createBuffer(1, 1, 22050);
     const src = ctx.createBufferSource();
     src.buffer = buf; src.connect(ctx.destination); src.start(0);
     audioUnlocked = true;
-  } catch(e){}
+    console.log('Audio unlocked, ctx state:', ctx.state);
+  } catch(e){ console.error('unlock:', e); }
 }
 document.addEventListener('touchstart', unlockAudio, {once:true,passive:true});
 document.addEventListener('click', unlockAudio, {once:true,passive:true});
@@ -1202,23 +1202,27 @@ async function callGemini(userMessage) {
   return reply;
 }
 
-// Shared AudioContext for iOS compatibility
-let sharedAudioCtx = null;
-let currentAudioSource = null;
+// ── Audio System ───────────────────────────────────
+// Single shared AudioContext - must be created/resumed inside a user gesture
+let _actx = null;
+let _source = null;
 
-function getAudioCtx() {
-  if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
-    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function _getCtx() {
+  if (!_actx || _actx.state === 'closed') {
+    _actx = new (window.AudioContext || window.webkitAudioContext)();
   }
-  return sharedAudioCtx;
+  return _actx;
+}
+
+// Call this inside every user gesture handler (tap, click)
+async function _resumeCtx() {
+  const ctx = _getCtx();
+  if (ctx.state === 'suspended') await ctx.resume();
+  return ctx;
 }
 
 async function speakText(text) {
-  // Stop current audio
-  if (currentAudioSource) {
-    try { currentAudioSource.stop(); } catch(e) {}
-    currentAudioSource = null;
-  }
+  if (_source) { try { _source.stop(); } catch(e){} _source = null; }
   setOrbState('speaking');
   setVoiceLabel('說話中…');
   try {
@@ -1228,30 +1232,23 @@ async function speakText(text) {
     });
     if (!res.ok) throw new Error('TTS failed');
     const arrayBuf = await res.arrayBuffer();
-
-    // Use shared AudioContext - iOS allows playback if context was created during user gesture
-    const ctx = getAudioCtx();
+    const ctx = _getCtx();
     if (ctx.state === 'suspended') await ctx.resume();
-
-    const audioBuf = await ctx.decodeAudioData(arrayBuf);
-    const source = ctx.createBufferSource();
-    source.buffer = audioBuf;
-    source.connect(ctx.destination);
-    currentAudioSource = source;
-
-    source.onended = () => {
-      currentAudioSource = null;
-      setOrbState('idle');
-      setVoiceLabel('');
+    const audioBuf = await ctx.decodeAudioData(arrayBuf.slice(0));
+    const src = ctx.createBufferSource();
+    src.buffer = audioBuf;
+    src.connect(ctx.destination);
+    _source = src;
+    src.onended = () => {
+      _source = null;
+      setOrbState('idle'); setVoiceLabel('');
       greetingText.textContent = 'Gotour AI 智慧小助手';
       greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的喔';
     };
-    source.start(0);
-
+    src.start(0);
   } catch(e) {
-    console.error('TTS error:', e);
-    setOrbState('idle');
-    setVoiceLabel('');
+    console.error('TTS:', e);
+    setOrbState('idle'); setVoiceLabel('');
   }
 }
 
@@ -1259,8 +1256,7 @@ async function toggleRecording() {
   await unlockAudio();
 
   // Resume AudioContext on tap (iOS)
-  const ctx = getAudioCtx();
-  if (ctx.state === 'suspended') ctx.resume();
+  await _resumeCtx();
 
   if (isLoading) return;
 
