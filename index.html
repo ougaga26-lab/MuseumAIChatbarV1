@@ -1341,35 +1341,69 @@ function mapZoom(n,f){mapS[n].scale=Math.min(Math.max(mapS[n].scale*f,1),5);appl
 
 // ── Exhibition ─────────────────────────────────────
 const EXHIBITS=[
-  {badge:'進行中',title:'轉機：臺灣女子移動紀事特展',date:'2025-12-23 ～ 2026-08-30',location:'展示教育大樓 4樓 第1特展室',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg',
-   desc:`以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
+  {
+    badge:'進行中',
+    title:'轉機：臺灣女子移動紀事特展',
+    date:'2025-12-23 ～ 2026-08-30',
+    location:'展示教育大樓 4樓 第1特展室',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex2banner.jpg',
+    desc:`以「移動」為關鍵字，回顧百年來臺灣女性如何在制度、身體與社會框架的限制中，尋找轉圜的可能，走向更廣闊的人生舞臺。
 
-展覽以「行前準備」為起點，探討纏足、養女制度與月經禁忌等議題。動線分為「國內線」與「國際線」，穿梭於9個登機門（GATE），走進16位女性人物的生命旅途。
+特展以「行前準備」為起點，探討長期束縛女性行動的社會規訓，如纏足、養女制度與月經禁忌等議題。接著，觀眾可循著展覽動線，選擇搭乘「國內線」或「國際線」，穿梭於9個登機門（GATE），走進16位女性人物的生命旅途。
 
-「國內線」：日本時代新式產婆、1949年女性攜老幼重建家園、1970年代鐵道隨車員與藝霞歌舞劇團、工廠女工撐起 Made in Taiwan 經濟奇蹟、1990年代跨國婚姻社會處境。
+✈️ 國內線
+從日本時代新式產婆職業的興起，到1949年女性在戰亂中肩負攜帶老幼、重建家園的重擔；再到1970年代鐵道隨車員與藝霞歌舞劇團的巡演生活，以及工廠女工撐起「Made in Taiwan」經濟奇蹟的勞動身影，並進一步納入女同志的現身與安身經驗，再延伸至1990年代女性權益抗爭與跨國婚姻所面臨的社會處境。
 
-「國際線」：臺灣第一位環球旅行者張聰明、陳進與林月雲赴日深造、謝雪紅在蘇聯的生命轉折、三毛筆下的撒哈拉……`},
-  {badge:'進行中',title:'地方記憶・遊牧：國家文化記憶庫社群合作成果展',date:'2026-02-10 ～ 2026-05-31',location:'展示教育大樓 1樓 大廳',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg',
-   desc:`藉由數位科技與社群共創的力量，保存臺灣多元的文化DNA，以創用CC授權讓文化內容能被自由運用與再創造。
+🌏 國際線
+從第一位進行環球旅行的臺灣人張聰明談起，延伸至陳進、林月雲、莊淑旂等人赴日深造的志向；回望謝雪紅在蘇聯的生命轉折，並呈現美國作為求學、移民與政治流亡之地的多重意義；再走入三毛筆下的撒哈拉，開啟廣大讀者對遠方的嚮往。`
+  },
+  {
+    badge:'進行中',
+    title:'地方記憶・遊牧：國家文化記憶庫社群合作成果展',
+    date:'2026-02-10 ～ 2026-05-31',
+    location:'展示教育大樓 1樓 大廳',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex1banner.jpg',
+    desc:`從這裡出發，一起踏上地方記憶的遊牧旅程。在每個人心中，都藏著一塊屬於這片土地與時代的文化記憶。藉由數位科技與社群共創的力量，國家文化記憶庫得以保存臺灣多元的文化DNA，讓文化內容能被自由運用、轉譯與再創造。
 
 自2021年起，本館積極推動國家文化記憶庫計畫，足跡遍及城市、小鎮、鄉村與部落，從桃園大溪、彰化溪州、臺東都蘭帶回當地的記憶故事。
 
-四大展區：
-🏫 教案小屋：地方故事進入課堂
-🎬 光影故事帳：影像紀錄三地生命能量
-🎧 聲音角落：戴上耳機聆聽市場、街巷、風聲與鳥鳴
-✍️ 下一段記憶遊牧：寫下你的文化記憶`},
-  {badge:'即將結束',title:'開箱吧！臺史博館藏桌遊特展',date:'2025-06-03 ～ 2026-04-26',location:'展示教育大樓 4樓 第3特展室',banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg',
-   desc:`臺史博寶庫開啟！收藏著阿公阿嬤時代的桌上遊戲，從清代葫蘆問、日治時代雙六，到戰後大富翁。
+🏫 教案小屋
+地方故事進入課堂，從戲劇、設計、導覽到AI人工智慧，展現地方記憶如何滋養教育創意。
 
-五大主題：
+🎬 光影故事帳
+三個完全不同的地區和族群，展現截然不同的生命能量與文化願景。靜靜坐上片刻，就能在觀看中與他們的靈魂相遇。
+
+🎧 聲音角落
+戴上耳機，聆聽市場的喧鬧、街巷的腳步、風聲與鳥鳴，那些記憶與生活情感的虛形載體。
+
+✍️ 下一段記憶遊牧
+拾起紙和筆，寫下你的文化記憶，讓你的到來成為一場共同創造的展覽。`
+  },
+  {
+    badge:'即將結束',
+    title:'開箱吧！臺史博館藏桌遊特展',
+    date:'2025-06-03 ～ 2026-04-26',
+    location:'展示教育大樓 4樓 第3特展室',
+    banner:'https://raw.githubusercontent.com/ougaga26-lab/MuseumAIChatbarV1/main/banner/ex3banner.jpg',
+    desc:`傳說臺史博裡有一座寶庫，收藏著阿公阿嬤、阿爸阿母，甚至古代人玩過的桌上遊戲。這些遊戲就像時光機，帶我們回到過去，捕捉各個時代的樣貌與變化。
+
 🌀 旋轉吧！螺旋人生
-✈️ 畫上夢想即刻啟程
-📚 歷史考卷不會考但很好玩
-🦁 動物世界大冒險
-🤫 噓！偷偷摸摸玩
+清代葫蘆問、日本時代臺北市街雙六遊戲，從螺旋進入桌遊的時光隧道。
 
-現場設有桌遊體驗區，展覽就是遊戲場！`}
+✈️ 畫上夢想即刻啟程
+環遊世界桌遊、大富翁與幸福人生，那個時代最流行的夢想全收錄。
+
+📚 歷史考卷不會考但很好玩
+升官圖、反攻勝利棋——老桌遊就是最生動的歷史課本。
+
+🦁 動物世界大冒險
+虎棋、鬥獸棋、臺灣獨創老鼠牌，可愛又繽紛讓大小朋友都開心！
+
+🤫 噓！偷偷摸摸玩
+十八骰仔、四色牌、天九牌、麻將——阿公阿嬤那個年代的秘密娛樂。
+
+現場設有桌遊體驗區，展覽就是遊戲場！`
+  }
 ];
 function openExhibitDrawer(){document.getElementById('exhibitDrawer').classList.add('open');document.getElementById('exhibitOverlay').classList.add('open');}
 function closeExhibitDrawer(){const d=document.getElementById('exhibitDrawer');d.classList.remove('open','expanded');document.getElementById('exhibitOverlay').classList.remove('open');}
