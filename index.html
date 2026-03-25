@@ -409,6 +409,134 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
   letter-spacing: 0.14em;
   font-family: 'Noto Serif TC', serif;
 }
+
+/* ── Map Drawer ──────────────────────────────────── */
+.map-drawer {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+  height: 80%;
+  background: rgba(2,5,16,0.92);
+  border-top: 1px solid rgba(0,255,200,0.15);
+  border-radius: 22px 22px 0 0;
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: 0 -8px 48px rgba(0,255,200,0.08);
+  display: flex; flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.32,0.72,0,1);
+}
+.map-drawer.open { transform: translateY(0); }
+
+.map-drawer-handle {
+  width: 36px; height: 4px;
+  background: rgba(0,255,200,0.2);
+  border-radius: 2px;
+  margin: 12px auto 0;
+  cursor: pointer; flex-shrink: 0;
+}
+
+.map-drawer-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px 0; flex-shrink: 0;
+}
+.map-drawer-title {
+  font-size: 13px; color: rgba(0,255,200,0.8);
+  letter-spacing: 0.06em;
+}
+.map-drawer-close {
+  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
+  cursor: pointer; width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(0,255,200,0.6);
+}
+.map-drawer-close svg { width: 14px; height: 14px; }
+
+/* Tab switcher */
+.map-tabs {
+  display: flex; gap: 0;
+  margin: 12px 20px 0;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; overflow: hidden;
+  flex-shrink: 0;
+}
+.map-tab {
+  flex: 1; padding: 9px 0;
+  background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  transition: all 0.2s; letter-spacing: 0.05em;
+}
+.map-tab.active {
+  background: rgba(0,255,200,0.15);
+  color: rgba(0,255,200,0.9);
+}
+.map-tab + .map-tab {
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Map image container */
+.map-content {
+  flex: 1; overflow: hidden;
+  margin: 12px 16px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  position: relative;
+}
+.map-panel {
+  display: none;
+  width: 100%; height: 100%;
+}
+.map-panel.active { display: block; }
+
+/* Pinch-zoom container */
+.map-zoom-wrap {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+}
+.map-zoom-wrap:active { cursor: grabbing; }
+.map-zoom-inner {
+  width: 100%; height: 100%;
+  transform-origin: 0 0;
+  transition: transform 0.05s;
+  will-change: transform;
+}
+.map-zoom-inner img {
+  width: 100%; height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Zoom controls */
+.map-zoom-btns {
+  position: absolute; bottom: 14px; right: 14px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 2;
+}
+.map-zoom-btn {
+  width: 34px; height: 34px;
+  background: rgba(2,5,16,0.8);
+  border: 1px solid rgba(0,255,200,0.25);
+  border-radius: 10px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(0,255,200,0.8); font-size: 18px;
+  backdrop-filter: blur(10px);
+  transition: background 0.2s;
+}
+.map-zoom-btn:active { background: rgba(0,255,200,0.15); }
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .map-content { margin-bottom: calc(16px + env(safe-area-inset-bottom)); }
+}
+
+/* Tablet */
+@media (min-width: 600px) {
+  .map-drawer { max-width: 480px; left: 50%; transform: translateX(-50%) translateY(100%); }
+  .map-drawer.open { transform: translateX(-50%) translateY(0); }
+}
 </style>
 </head>
 <body>
@@ -467,7 +595,7 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
       </svg>
       <span>展覽列表</span>
     </button>
-    <button class="tab-icon-btn" onclick="showComingSoon('園區地圖')">
+    <button class="tab-icon-btn" onclick="openMapDrawer()">
       <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
         <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
@@ -1171,6 +1299,104 @@ function showComingSoon(name) {
   setTimeout(() => { label.textContent = ''; label.style.opacity = '0'; }, 2000);
 }
 
+
+// ═══════════════════════════════════════════════════
+// MAP DRAWER
+// ═══════════════════════════════════════════════════
+const mapState = {
+  park:   { scale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0 },
+  indoor: { scale: 1, x: 0, y: 0, dragging: false, lastX: 0, lastY: 0 }
+};
+
+function openMapDrawer() {
+  document.getElementById('mapDrawer').classList.add('open');
+  document.getElementById('mapOverlay').classList.add('open');
+}
+function closeMapDrawer() {
+  document.getElementById('mapDrawer').classList.remove('open');
+  document.getElementById('mapOverlay').classList.remove('open');
+}
+
+function switchMap(name) {
+  document.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('map' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function zoomMap(name, factor) {
+  const s = mapState[name];
+  const newScale = Math.min(Math.max(s.scale * (factor > 0 ? factor : 1/Math.abs(factor)), 1), 4);
+  s.scale = newScale;
+  applyTransform(name);
+}
+
+function applyTransform(name) {
+  const s = mapState[name];
+  const el = document.getElementById('zoomInner' + name.charAt(0).toUpperCase() + name.slice(1));
+  el.style.transform = `translate(${s.x}px, ${s.y}px) scale(${s.scale})`;
+}
+
+// Drag to pan
+['Park','Indoor'].forEach(name => {
+  const wrap = document.getElementById('zoomWrap' + name);
+  const key = name.toLowerCase();
+  const s = mapState[key];
+
+  // Mouse
+  wrap.addEventListener('mousedown', e => { s.dragging=true; s.lastX=e.clientX; s.lastY=e.clientY; });
+  window.addEventListener('mousemove', e => {
+    if (!s.dragging) return;
+    s.x += e.clientX - s.lastX; s.y += e.clientY - s.lastY;
+    s.lastX=e.clientX; s.lastY=e.clientY;
+    applyTransform(key);
+  });
+  window.addEventListener('mouseup', () => s.dragging = false);
+
+  // Touch drag
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      s.dragging=true; s.lastX=e.touches[0].clientX; s.lastY=e.touches[0].clientY;
+    }
+  }, {passive:true});
+  wrap.addEventListener('touchmove', e => {
+    if (s.dragging && e.touches.length === 1) {
+      s.x += e.touches[0].clientX - s.lastX;
+      s.y += e.touches[0].clientY - s.lastY;
+      s.lastX=e.touches[0].clientX; s.lastY=e.touches[0].clientY;
+      applyTransform(key);
+    }
+  }, {passive:true});
+  wrap.addEventListener('touchend', () => s.dragging = false, {passive:true});
+
+  // Pinch zoom
+  let lastDist = 0;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 2) {
+      lastDist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+    }
+  }, {passive:true});
+  wrap.addEventListener('touchmove', e => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      if (lastDist > 0) {
+        s.scale = Math.min(Math.max(s.scale * (dist/lastDist), 1), 4);
+        applyTransform(key);
+      }
+      lastDist = dist;
+    }
+  }, {passive:true});
+});
+
+// Swipe down to close
+let mapTouchStartY = 0;
+document.getElementById('mapDrawer').addEventListener('touchstart', e => {
+  mapTouchStartY = e.touches[0].clientY;
+}, {passive:true});
+document.getElementById('mapDrawer').addEventListener('touchend', e => {
+  if (e.changedTouches[0].clientY - mapTouchStartY > 60) closeMapDrawer();
+}, {passive:true});
+
 function askChip(btn) { sendMessage(btn.textContent); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
@@ -1178,5 +1404,55 @@ function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.sc
 // Init
 window.addEventListener('DOMContentLoaded', initOrb);
 </script>
+
+<!-- Map Drawer -->
+<div class="map-drawer" id="mapDrawer">
+  <div class="map-drawer-handle" onclick="closeMapDrawer()"></div>
+  <div class="map-drawer-header">
+    <span class="map-drawer-title">園區地圖</span>
+    <button class="map-drawer-close" onclick="closeMapDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+
+  <div class="map-tabs">
+    <button class="map-tab active" onclick="switchMap('park')">臺灣歷史公園</button>
+    <button class="map-tab" onclick="switchMap('indoor')">室內地圖</button>
+  </div>
+
+  <div class="map-content">
+    <!-- Park map -->
+    <div class="map-panel active" id="mapPark">
+      <div class="map-zoom-wrap" id="zoomWrapPark">
+        <div class="map-zoom-inner" id="zoomInnerPark">
+          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false">
+        </div>
+      </div>
+      <div class="map-zoom-btns">
+        <button class="map-zoom-btn" onclick="zoomMap('park', 1.3)">+</button>
+        <button class="map-zoom-btn" onclick="zoomMap('park', -1.3)">−</button>
+      </div>
+    </div>
+
+    <!-- Indoor map -->
+    <div class="map-panel" id="mapIndoor">
+      <div class="map-zoom-wrap" id="zoomWrapIndoor">
+        <div class="map-zoom-inner" id="zoomInnerIndoor">
+          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/indoor-map.jpg" alt="室內地圖" draggable="false">
+        </div>
+      </div>
+      <div class="map-zoom-btns">
+        <button class="map-zoom-btn" onclick="zoomMap('indoor', 1.3)">+</button>
+        <button class="map-zoom-btn" onclick="zoomMap('indoor', -1.3)">−</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Map overlay -->
+<div class="drawer-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
+
 </body>
 </html>
