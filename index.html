@@ -695,12 +695,61 @@ function mapZoom(n, f) {
     }
   },{passive:true});
 });
-// Swipe down to close
+// Swipe down to close - wrapped in DOMContentLoaded to ensure DOM exists
 let mty=0;
-document.getElementById('mapDrawer').addEventListener('touchstart',e=>{mty=e.touches[0].clientY;},{passive:true});
-document.getElementById('mapDrawer').addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-mty>60)closeMapDrawer();},{passive:true});
+window.addEventListener('DOMContentLoaded', () => {
+  const md = document.getElementById('mapDrawer');
+  if (md) {
+    md.addEventListener('touchstart', e=>{ mty=e.touches[0].clientY; },{passive:true});
+    md.addEventListener('touchend',   e=>{ if(e.changedTouches[0].clientY-mty>60) closeMapDrawer(); },{passive:true});
+  }
+});
 
 </script>
+
+<!-- Map overlay -->
+<div class="map-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
+
+<!-- Map Drawer -->
+<div class="map-drawer" id="mapDrawer">
+  <div class="map-handle" onclick="closeMapDrawer()"></div>
+  <div class="map-header">
+    <span class="map-header-title">園區地圖</span>
+    <button class="map-close-btn" onclick="closeMapDrawer()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  </div>
+  <div class="map-tabs">
+    <button class="map-tab active" onclick="switchMapTab(this,'mapPark')">臺灣歷史公園</button>
+    <button class="map-tab" onclick="switchMapTab(this,'mapIndoor')">室內地圖</button>
+  </div>
+  <div class="map-body">
+    <div class="map-panel active" id="mapPark">
+      <div class="map-zoom-wrap" id="zoomWrapPark">
+        <div class="map-zoom-inner" id="zoomInnerPark">
+          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false">
+        </div>
+      </div>
+      <div class="map-zoom-btns">
+        <button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button>
+        <button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button>
+      </div>
+    </div>
+    <div class="map-panel" id="mapIndoor">
+      <div class="map-zoom-wrap" id="zoomWrapIndoor">
+        <div class="map-zoom-inner" id="zoomInnerIndoor">
+          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/indoor-map.jpg" alt="室內地圖" draggable="false">
+        </div>
+      </div>
+      <div class="map-zoom-btns">
+        <button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button>
+        <button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 
@@ -1350,53 +1399,78 @@ function askChip(btn) { sendMessage(btn.textContent); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
 
+// ── Map Drawer Functions ────────────────────────────
+function openMapDrawer() {
+  document.getElementById('mapDrawer').classList.add('open');
+  document.getElementById('mapOverlay').classList.add('open');
+}
+function closeMapDrawer() {
+  document.getElementById('mapDrawer').classList.remove('open');
+  document.getElementById('mapOverlay').classList.remove('open');
+}
+function switchMapTab(btn, panelId) {
+  document.querySelectorAll('.map-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.map-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+
+const mapS = {
+  Park:   { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 },
+  Indoor: { scale:1, x:0, y:0, dragging:false, lx:0, ly:0 }
+};
+function applyMapTransform(n) {
+  document.getElementById('zoomInner'+n).style.transform =
+    `translate(${mapS[n].x}px,${mapS[n].y}px) scale(${mapS[n].scale})`;
+}
+function mapZoom(n, f) {
+  mapS[n].scale = Math.min(Math.max(mapS[n].scale * f, 1), 5);
+  applyMapTransform(n);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  ['Park','Indoor'].forEach(n => {
+    const w = document.getElementById('zoomWrap'+n);
+    const s = mapS[n];
+    w.addEventListener('mousedown', e => { s.dragging=true; s.lx=e.clientX; s.ly=e.clientY; });
+    window.addEventListener('mousemove', e => {
+      if (!s.dragging) return;
+      s.x+=e.clientX-s.lx; s.y+=e.clientY-s.ly;
+      s.lx=e.clientX; s.ly=e.clientY; applyMapTransform(n);
+    });
+    window.addEventListener('mouseup', () => s.dragging=false);
+    w.addEventListener('touchstart', e => {
+      if(e.touches.length===1){s.dragging=true;s.lx=e.touches[0].clientX;s.ly=e.touches[0].clientY;}
+    },{passive:true});
+    w.addEventListener('touchmove', e => {
+      if(s.dragging&&e.touches.length===1){
+        s.x+=e.touches[0].clientX-s.lx; s.y+=e.touches[0].clientY-s.ly;
+        s.lx=e.touches[0].clientX; s.ly=e.touches[0].clientY; applyMapTransform(n);
+      }
+    },{passive:true});
+    w.addEventListener('touchend', ()=>s.dragging=false,{passive:true});
+    let ld=0;
+    w.addEventListener('touchstart', e=>{
+      if(e.touches.length===2) ld=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+    },{passive:true});
+    w.addEventListener('touchmove', e=>{
+      if(e.touches.length===2){
+        const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);
+        if(ld>0){s.scale=Math.min(Math.max(s.scale*(d/ld),1),5);applyMapTransform(n);}
+        ld=d;
+      }
+    },{passive:true});
+  });
+
+  const md = document.getElementById('mapDrawer');
+  let mty=0;
+  md.addEventListener('touchstart', e=>{mty=e.touches[0].clientY;},{passive:true});
+  md.addEventListener('touchend', e=>{if(e.changedTouches[0].clientY-mty>60)closeMapDrawer();},{passive:true});
+});
+
 // Init
 window.addEventListener('DOMContentLoaded', initOrb);
 </script>
-
-<!-- Map overlay -->
-<div class="map-overlay" id="mapOverlay" onclick="closeMapDrawer()"></div>
-
-<!-- Map Drawer -->
-<div class="map-drawer" id="mapDrawer">
-  <div class="map-handle" onclick="closeMapDrawer()"></div>
-  <div class="map-header">
-    <span class="map-header-title">園區地圖</span>
-    <button class="map-close-btn" onclick="closeMapDrawer()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-  </div>
-  <div class="map-tabs">
-    <button class="map-tab active" onclick="switchMapTab(this,'mapPark')">臺灣歷史公園</button>
-    <button class="map-tab"        onclick="switchMapTab(this,'mapIndoor')">室內地圖</button>
-  </div>
-  <div class="map-body">
-    <div class="map-panel active" id="mapPark">
-      <div class="map-zoom-wrap" id="zoomWrapPark">
-        <div class="map-zoom-inner" id="zoomInnerPark">
-          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/park-map.jpg" alt="臺灣歷史公園地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Park',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Park',0.77)">−</button>
-      </div>
-    </div>
-    <div class="map-panel" id="mapIndoor">
-      <div class="map-zoom-wrap" id="zoomWrapIndoor">
-        <div class="map-zoom-inner" id="zoomInnerIndoor">
-          <img src="https://ougaga26-lab.github.io/MuseumAIChatbarV1/maps/indoor-map.jpg" alt="室內地圖" draggable="false">
-        </div>
-      </div>
-      <div class="map-zoom-btns">
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',1.3)">+</button>
-        <button class="map-zoom-btn" onclick="mapZoom('Indoor',0.77)">−</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 </body>
 </html>
