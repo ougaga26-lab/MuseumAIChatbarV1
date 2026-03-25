@@ -598,12 +598,12 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
   </div>
 
   <div class="chip-row" id="chipRow">
-    <button class="chip-btn" onclick="askChip(this)">幾點開館？</button>
-    <button class="chip-btn" onclick="askChip(this)">票價多少？</button>
-    <button class="chip-btn" onclick="askChip(this)">現在有哪些特展？</button>
-    <button class="chip-btn" onclick="askChip(this)">怎麼搭公車來？</button>
-    <button class="chip-btn" onclick="askChip(this)">可以帶寵物嗎？</button>
-    <button class="chip-btn" onclick="askChip(this)">停車多少錢？</button>
+    <button class="chip-btn" class="chip-trigger">幾點開館？</button>
+    <button class="chip-btn" class="chip-trigger">票價多少？</button>
+    <button class="chip-btn" class="chip-trigger">現在有哪些特展？</button>
+    <button class="chip-btn" class="chip-trigger">怎麼搭公車來？</button>
+    <button class="chip-btn" class="chip-trigger">可以帶寵物嗎？</button>
+    <button class="chip-btn" class="chip-trigger">停車多少錢？</button>
   </div>
 
   <div class="chat-area" id="chatArea">
@@ -616,7 +616,7 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
     <div class="drawer-input-wrap">
       <textarea id="userInput" placeholder="輸入問題…" rows="1"
         onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-      <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+      <button class="send-btn" id="sendBtn">
         <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
       </button>
     </div>
@@ -1301,10 +1301,30 @@ async function toggleRecording() {
 }
 
 async function convertToWav(blob) {
-  const ctx = new AudioContext({sampleRate:16000});
-  const audio = await ctx.decodeAudioData(await blob.arrayBuffer());
-  const pcm = audio.getChannelData(0);
-  return new Blob([pcmToWav(pcm,16000)],{type:'audio/wav'});
+  // Use OfflineAudioContext to avoid interfering with sharedAudioCtx
+  const arrayBuf = await blob.arrayBuffer();
+  return new Promise((resolve, reject) => {
+    // Decode first to get duration/sampleRate info
+    const tmpCtx = new OfflineAudioContext(1, 1, 16000);
+    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
+    decodeCtx.decodeAudioData(arrayBuf, (audioBuffer) => {
+      decodeCtx.close();
+      // Resample to 16kHz using OfflineAudioContext
+      const offlineCtx = new OfflineAudioContext(
+        1,
+        Math.ceil(audioBuffer.duration * 16000),
+        16000
+      );
+      const src = offlineCtx.createBufferSource();
+      src.buffer = audioBuffer;
+      src.connect(offlineCtx.destination);
+      src.start(0);
+      offlineCtx.startRendering().then(rendered => {
+        const pcm = rendered.getChannelData(0);
+        resolve(new Blob([pcmToWav(pcm, 16000)], {type:'audio/wav'}));
+      }).catch(reject);
+    }, reject);
+  });
 }
 function pcmToWav(pcm,sr) {
   const buf = new ArrayBuffer(44+pcm.length*2);
@@ -1360,7 +1380,7 @@ function showComingSoon(name) {
   setTimeout(() => { label.textContent = ''; label.style.opacity = '0'; }, 2000);
 }
 
-function askChip(btn) { sendMessage(btn.textContent); }
+function askChip(btn) { resumeAudioCtx().then(() => sendMessage(btn.textContent)); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
 
@@ -1538,6 +1558,26 @@ function showComingSoon(name){const l=document.getElementById('voiceLabel');l.te
 // Init
 window.addEventListener('DOMContentLoaded', function(){
   initOrb();
+
+  // ── Proper audio unlock on all user gesture entry points ──
+  // Send button
+  document.getElementById('sendBtn').addEventListener('click', async () => {
+    await resumeAudioCtx();
+    sendMessage();
+  });
+
+  // Chip buttons
+  document.querySelectorAll('.chip-trigger').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      await resumeAudioCtx();
+      sendMessage(btn.textContent);
+    });
+  });
+
+  // Text input focus/touchstart
+  const ua = document.getElementById('userInput');
+  ua.addEventListener('focus', () => resumeAudioCtx().catch(()=>{}));
+  ua.addEventListener('touchstart', () => resumeAudioCtx().catch(()=>{}), {passive:true});
   // Map touch
   ['Park','Indoor'].forEach(n=>{
     const w=document.getElementById('zoomWrap'+n);const s=mapS[n];
