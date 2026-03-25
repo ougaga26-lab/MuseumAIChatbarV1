@@ -113,13 +113,41 @@ html, body {
 
 /* ── Voice label ─────────────────────────────────── */
 .voice-label {
-  font-size: 12px; color: var(--text-dim);
-  letter-spacing: 0.08em;
-  height: 20px;
-  transition: opacity 0.3s;
-  text-align: center;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.75);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 16px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  color: #fff;
+  min-height: 38px;
+  min-width: 180px;
+  justify-content: center;
+  transition: all 0.25s ease;
   pointer-events: none;
+  backdrop-filter: blur(10px);
+  white-space: nowrap;
 }
+.voice-label.state-idle    { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
+.voice-label.state-listen  { color: #ff4444; border-color: rgba(255,68,68,0.4); }
+.voice-label.state-stt     { color: #ffcc00; border-color: rgba(255,204,0,0.4); }
+.voice-label.state-ai      { color: #4488ff; border-color: rgba(68,136,255,0.4); }
+.voice-label.state-speak   { color: #00ffcc; border-color: rgba(0,255,200,0.4); }
+
+.voice-label .status-dot-sm {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.voice-label.state-listen .status-dot-sm {
+  background: #ff4444;
+  box-shadow: 0 0 6px rgba(255,68,68,0.9);
+  animation: sPulse 1s ease-in-out infinite;
+}
+.voice-label.state-stt .status-dot-sm  { background: #ffcc00; box-shadow: 0 0 6px rgba(255,204,0,0.9); animation: sPulse 1.2s ease-in-out infinite; }
+.voice-label.state-ai .status-dot-sm   { background: #4488ff; box-shadow: 0 0 6px rgba(68,136,255,0.9); animation: sPulse 1.4s ease-in-out infinite; }
+.voice-label.state-speak .status-dot-sm{ background: #00ffcc; box-shadow: 0 0 6px rgba(0,255,200,0.9); animation: sPulse 0.8s ease-in-out infinite; }
 
 /* ── Bottom bar ──────────────────────────────────── */
 
@@ -568,12 +596,12 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
 
   <div class="greeting">
     <h2 id="greetingText">Gotour AI 智慧小助手</h2>
-    <p id="greetingSubtext">可以跟我對話，或是對話紀錄也可以打字喔</p>
+    
   </div>
 
   <div class="orb-spacer"></div>
 
-  <div class="voice-label" id="voiceLabel"></div>
+  <div class="voice-label state-idle" id="voiceLabel"><span class="status-dot-sm"></span><span id="voiceLabelText">點擊球球詢問問題</span></div>
 
   <div class="bottom-bar">
     <div class="tab-bar">
@@ -1150,15 +1178,28 @@ async function forceUnlockAudio() {
 
 // DOM refs
 const voiceLabel = document.getElementById('voiceLabel');
-const greetingText = document.getElementById('greetingText');
-const greetingSubtext = document.getElementById('greetingSubtext');
 const chatArea = document.getElementById('chatArea');
 const sendBtn = document.getElementById('sendBtn');
 const userInput = document.getElementById('userInput');
 const chatTabBtn = document.getElementById('chatTabBtn');
 const chipRow = document.getElementById('chipRow');
 
-function setVoiceLabel(t) { voiceLabel.textContent = t; voiceLabel.style.opacity = t ? '1' : '0'; }
+function setVoiceLabel(t, state) {
+  const el = document.getElementById('voiceLabel');
+  const txt = document.getElementById('voiceLabelText');
+  const dot = el.querySelector('.status-dot-sm');
+  // Remove all state classes
+  el.classList.remove('state-idle','state-listen','state-stt','state-ai','state-speak');
+  if (!state || state === 'idle') {
+    el.classList.add('state-idle');
+    dot.style.display = 'none';
+    txt.textContent = t || '點擊球球詢問問題';
+  } else {
+    el.classList.add('state-' + state);
+    dot.style.display = 'block';
+    txt.textContent = t;
+  }
+}
 
 function openDrawer() {
   document.getElementById('drawer').classList.add('open');
@@ -1240,7 +1281,7 @@ async function speakText(text) {
     currentSource = null;
   }
   setOrbState('speaking');
-  setVoiceLabel('說話中…');
+  setVoiceLabel('AI 語音播放中', 'speak');
   try {
     const ctx = getAudioCtx();
     const res = await fetch(`${WORKER}/tts`, {
@@ -1256,18 +1297,18 @@ async function speakText(text) {
       currentSource = source;
       source.onended = () => {
         if (currentSource === source) currentSource = null;
-        setOrbState('idle'); setVoiceLabel('');
+        setOrbState('idle'); setVoiceLabel('', 'idle');
         greetingText.textContent = 'Gotour AI 智慧小助手';
         greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
       };
       source.start(0);
     }, (err) => {
       console.error('Decode error:', err);
-      setOrbState('idle'); setVoiceLabel('');
+      setOrbState('idle'); setVoiceLabel('', 'idle');
     });
   } catch(e) {
     console.error('TTS error:', e);
-    setOrbState('idle'); setVoiceLabel('');
+    setOrbState('idle'); setVoiceLabel('', 'idle');
   }
 }
 
@@ -1282,7 +1323,7 @@ async function toggleRecording() {
 
   isRecording = true;
   setOrbState('listening');
-  setVoiceLabel('聆聽中… 再點停止');
+  setVoiceLabel('聆聽中⋯ 再點停止', 'listen');
   if (currentSource) { try { currentSource.stop(); } catch(e){} currentSource = null; }
 
   try {
@@ -1294,7 +1335,7 @@ async function toggleRecording() {
       stream.getTracks().forEach(t=>t.stop());
       isRecording = false;
       setOrbState('thinking');
-      setVoiceLabel('辨識中…');
+      setVoiceLabel('語音轉換文字中', 'stt');
       // Re-unlock audio: mic release may reset iOS audio session
       await forceUnlockAudio().catch(()=>{});
       try {
@@ -1309,16 +1350,16 @@ async function toggleRecording() {
           sendMessage(text);
         } else {
           setOrbState('idle');
-          setVoiceLabel('未偵測到語音');
+          setVoiceLabel('未偵測到語音', 'stt');
           setTimeout(()=>setVoiceLabel(''), 2000);
         }
-      } catch { setOrbState('idle'); setVoiceLabel('辨識失敗，請再試'); setTimeout(()=>setVoiceLabel(''),2500); }
+      } catch { setOrbState('idle'); setVoiceLabel('辨識失敗，請再試', 'stt'); setTimeout(()=>setVoiceLabel(''),2500); }
     };
     mediaRecorder.start();
     setTimeout(() => mediaRecorder?.state==='recording' && mediaRecorder.stop(), 10000);
   } catch {
     isRecording = false; setOrbState('idle');
-    setVoiceLabel('無法存取麥克風'); setTimeout(()=>setVoiceLabel(''),2500);
+    setVoiceLabel('無法存取麥克風', 'listen'); setTimeout(()=>setVoiceLabel(''),2500);
   }
 }
 
@@ -1373,8 +1414,7 @@ async function sendMessage(text) {
     const reply = await callGemini(q);
     hideTyping();
     appendMsg(reply,'bot');
-    greetingText.textContent='回答完成';
-    greetingSubtext.textContent='點球球繼續說話';
+    
 
     // Intent detection based on USER QUESTION
     const replyWithContext = buildReplyWithContext(q, reply);
@@ -1384,8 +1424,7 @@ async function sendMessage(text) {
     appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。','bot',true);
     conversationHistory.pop();
     setOrbState('idle');
-    greetingText.textContent='你好，我是臺史博助理';
-    greetingSubtext.textContent='點球球說話，或向上滑動查看對話';
+    
   }
   isLoading=false; sendBtn.disabled=false;
 }
