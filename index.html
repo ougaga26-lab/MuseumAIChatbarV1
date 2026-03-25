@@ -1522,7 +1522,6 @@ function showIOSSilentWarning() {
 function startBGM() {
   const bgm = document.getElementById('bgm');
   if (!bgm || bgm._started) return;
-  bgm.volume = 0.18;
   bgm.play().catch(()=>{});
   bgm._started = true;
 }
@@ -1619,6 +1618,15 @@ function showComingSoon(name){const l=document.getElementById('voiceLabel');l.te
 window.addEventListener('DOMContentLoaded', function(){
   initOrb();
   showIOSSilentWarning();
+  // Auto-play BGM on first interaction
+  document.addEventListener("touchstart", function tryBGM() {
+    startBGM();
+    document.removeEventListener("touchstart", tryBGM);
+  }, {once:true, passive:true});
+  document.addEventListener("click", function tryBGM() {
+    startBGM();
+    document.removeEventListener("click", tryBGM);
+  }, {once:true});
 
   // ── Proper audio unlock on all user gesture entry points ──
   // Send button
