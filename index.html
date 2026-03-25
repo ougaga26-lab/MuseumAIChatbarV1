@@ -77,7 +77,7 @@ html, body {
   background: rgba(0,255,200,0.08);
   border: 1px solid rgba(0,255,200,0.2);
   border-radius: 20px; padding: 4px 10px;
-  font-size: 10px; color: rgba(0,255,200,0.65);
+  font-size: 10px; color: rgba(0,255,200,0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -122,31 +122,42 @@ html, body {
 }
 
 /* ── Bottom bar ──────────────────────────────────── */
+
+
 .bottom-bar {
   width: 100%; padding: 14px 24px 20px;
   display: flex; align-items: center; justify-content: center;
-  gap: 20px;
 }
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .bottom-bar { padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
 }
-
-.chat-tab-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  background: rgba(0,255,200,0.08); border: 1px solid rgba(0,255,200,0.2);
-  cursor: pointer;
-  padding: 8px 20px; border-radius: 20px;
-  color: rgba(80,40,90,0.75);
-  transition: all 0.2s;
-  position: relative;
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 20px rgba(200,140,200,0.2);
+.tab-bar {
+  display: flex; align-items: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
 }
-.chat-tab-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.97); }
+.tab-icon-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  background: none; border: none;
+  cursor: pointer;
+  padding: 10px 24px;
+  transition: background 0.2s;
+  position: relative;
+  flex: 1;
+}
+.tab-icon-btn + .tab-icon-btn {
+  border-left: 1px solid rgba(255,255,255,0.15);
+}
+.tab-icon-btn:active { background: rgba(255,255,255,0.15); }
+.tab-icon-btn svg { width: 20px; height: 20px; }
+.tab-icon-btn span { font-size: 9px; color: #ffffff; letter-spacing: 0.05em; display: block; }
 .chat-tab-btn svg { width: 22px; height: 22px; }
 .chat-tab-btn span { font-size: 10px; letter-spacing: 0.05em; color: rgba(200,240,255,0.6); }
-.chat-tab-btn.has-messages .notif-dot {
+.tab-icon-btn.has-messages .notif-dot {
   display: block;
 }
 .notif-dot {
@@ -243,7 +254,16 @@ html, body {
   flex-shrink: 0; display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 500; margin-top: 2px;
 }
-.avatar.bot { background: linear-gradient(135deg, #00ffcc, #00aaff); color:#fff; font-family:'Noto Serif TC',serif; }
+.avatar.bot {
+  background: #fff;
+  overflow: hidden;
+  padding: 0;
+}
+.avatar.bot img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 .avatar.user { background: var(--surface2); color: var(--text-dim); }
 
 .bubble {
@@ -383,9 +403,9 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
 @keyframes ab3spin { to { --a3: 480deg } }
 
 .museum-name {
-  font-size: 10px;
+  font-size: 15px;
   font-weight: 300;
-  color: rgba(200,240,255,0.45);
+  color: rgba(255,255,255,0.85);
   letter-spacing: 0.14em;
   font-family: 'Noto Serif TC', serif;
 }
@@ -432,13 +452,29 @@ textarea::placeholder { color: rgba(0,255,200,0.3); }
   <div class="voice-label" id="voiceLabel"></div>
 
   <div class="bottom-bar">
-    <button class="chat-tab-btn" id="chatTabBtn" onclick="openDrawer()">
+    <div class="tab-bar">
+    <button class="tab-icon-btn" id="chatTabBtn" onclick="openDrawer()">
       <div class="notif-dot"></div>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <span>對話記錄</span>
     </button>
+    <button class="tab-icon-btn" onclick="showComingSoon('展覽列表')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      <span>展覽列表</span>
+    </button>
+    <button class="tab-icon-btn" onclick="showComingSoon('園區地圖')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+        <line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+      </svg>
+      <span>園區地圖</span>
+    </button>
+    </div>
   </div>
 </div>
 
@@ -943,7 +979,14 @@ function appendMsg(text, role, isError=false) {
   div.className = `msg ${role}`;
   const av = document.createElement('div');
   av.className = `avatar ${role}`;
-  av.textContent = role==='bot' ? '史' : '我';
+  if (role === 'bot') {
+    const img = document.createElement('img');
+    img.src = 'https://ougaga26-lab.github.io/MuseumAIChatbarV1/logo.png';
+    img.alt = 'AI';
+    av.appendChild(img);
+  } else {
+    av.textContent = '我';
+  }
   const bubble = document.createElement('div');
   bubble.className = `bubble ${role}${isError?' error':''}`;
   bubble.style.whiteSpace = 'pre-line';
@@ -1118,6 +1161,13 @@ async function sendMessage(text) {
     greetingSubtext.textContent='點球球說話，或向上滑動查看對話';
   }
   isLoading=false; sendBtn.disabled=false;
+}
+
+function showComingSoon(name) {
+  const label = document.getElementById('voiceLabel');
+  label.textContent = name + ' 即將推出';
+  label.style.opacity = '1';
+  setTimeout(() => { label.textContent = ''; label.style.opacity = '0'; }, 2000);
 }
 
 function askChip(btn) { sendMessage(btn.textContent); }
