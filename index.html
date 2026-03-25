@@ -622,6 +622,29 @@ textarea::placeholder { color: var(--text-dim); }
 </div>
 
 <script>
+
+// ── iOS Audio Unlock ───────────────────────────────────────────
+let audioUnlocked = false;
+let pendingSpeech = null;
+
+async function unlockAudio() {
+  if (audioUnlocked) return;
+  try {
+    const ctx = new AudioContext();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    await ctx.resume();
+    audioUnlocked = true;
+  } catch(e) {}
+}
+
+// Unlock on any touch
+document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+document.addEventListener('click', unlockAudio, { once: true, passive: true });
+
 // ── Config ─────────────────────────────────────────────────────
 const WORKER = 'https://nmth-api-proxy.ougaga26.workers.dev';
 
@@ -785,9 +808,22 @@ async function speakText(text) {
     const blob_ = await res.blob();
     const url = URL.createObjectURL(blob_);
     currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    currentAudio.setAttribute && currentAudio.setAttribute('playsinline', '');
     currentAudio.onended = () => { setBlobState('idle'); setVoiceLabel(''); };
     currentAudio.onerror = () => { setBlobState('idle'); setVoiceLabel(''); };
-    await currentAudio.play();
+
+    // iOS requires play() to be called from a user gesture context
+    // We store pending speech and show a tap-to-play button if blocked
+    const playPromise = currentAudio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay blocked — show tap to hear button
+        setBlobState('idle');
+        setVoiceLabel('點泡泡聽回答');
+        pendingSpeech = url;
+      });
+    }
   } catch (e) {
     setBlobState('idle'); setVoiceLabel('');
   }
@@ -795,6 +831,21 @@ async function speakText(text) {
 
 // ── STT ────────────────────────────────────────────────────────
 async function toggleRecording() {
+  await unlockAudio();
+
+  // If there's pending speech (iOS blocked autoplay), play it first
+  if (pendingSpeech) {
+    const url = pendingSpeech;
+    pendingSpeech = null;
+    setVoiceLabel('');
+    currentAudio = new Audio(url);
+    currentAudio.playsInline = true;
+    setBlobState('speaking');
+    currentAudio.onended = () => { setBlobState('idle'); setVoiceLabel(''); };
+    currentAudio.play().catch(() => {});
+    return;
+  }
+
   if (isLoading) return;
   if (isRecording) {
     mediaRecorder?.state === 'recording' && mediaRecorder.stop();
