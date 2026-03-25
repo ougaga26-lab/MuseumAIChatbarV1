@@ -116,14 +116,16 @@ html, body {
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(20dvh + 80px);
+  /* 關鍵修改：調整 bottom 數值 */
+  /* 55dvh 大約是在畫面中間偏上的位置，剛好在球的上方 */
+  bottom: 60dvh; 
   z-index: 4;
   display: inline-flex; align-items: center; gap: 6px;
-  background: rgba(0,0,0,0.82);
+  background: rgba(0,0,0,0.6); /* 稍微調透明一點，比較有科技感 */
   border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 6px;
-  padding: 5px 14px;
-  font-size: 10px;
+  border-radius: 20px; /* 改成橢圓形，跟球體視覺更和諧 */
+  padding: 6px 16px;
+  font-size: 11px;
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 300;
   letter-spacing: 0.08em;
@@ -133,7 +135,10 @@ html, body {
   text-align: center;
   pointer-events: none;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* 增加 Safari 相容性 */
   white-space: nowrap;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3); /* 增加一點陰影，讓它浮起來 */
+  transition: all 0.3s ease; /* 讓狀態切換時有一點平滑過渡 */
 }
 .voice-label.state-idle    { color: rgba(255,255,255,0.85); border-color: rgba(255,255,255,0.2); }
 .voice-label.state-listen  { color: #ff4444; border-color: rgba(255,68,68,0.4); }
