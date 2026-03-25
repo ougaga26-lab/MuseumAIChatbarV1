@@ -1075,7 +1075,13 @@ const KB = [
 
 const KB_TEXT = KB.map(e=>`【${e.category}】${e.q}\n${e.a}`).join('\n\n');
 const SYSTEM_PROMPT = `你是國立臺灣歷史博物館（臺史博）的 AI 問答助理。
-【規則】只能根據以下知識庫回答。找不到答案請說「我目前的資料沒有這個資訊，建議聯繫館方：06-356-8889」。問題模糊請主動反問。根據對話上下文理解真實意圖。語氣親切簡潔，繁體中文。回答盡量簡短，2-4句為佳。
+【規則】
+1. 只能根據以下知識庫回答。找不到答案請說「我目前的資料沒有這個資訊，建議聯繫館方：06-356-8889」。
+2. 問題模糊請主動反問。根據對話上下文理解真實意圖。
+3. 語氣親切簡潔，使用繁體中文。
+4. 回答盡量簡短，2-4句為佳。
+5. 【重要】絕對禁止使用任何 Markdown 格式符號，包括 * ** # ## ### - 等。不可用星號強調文字，不可用井號當標題，不可用連字號當列點。若需要列點請用「・」或數字加點（1. 2. 3.）代替。
+6. 【重要】若回覆中需要列出多個項目，請用「・」符號或換行數字列表，例如：「・項目一\n・項目二」。
 【知識庫】\n${KB_TEXT}`;
 
 let conversationHistory = [];
@@ -1311,7 +1317,10 @@ async function sendMessage(text) {
     appendMsg(reply,'bot');
     greetingText.textContent='回答完成';
     greetingSubtext.textContent='點球球繼續說話';
-    speakText(reply);
+
+    // Intent detection - prepend context phrase if needed
+    const replyWithContext = buildReplyWithContext(reply);
+    speakText(replyWithContext);
   } catch(err) {
     hideTyping();
     appendMsg('連線失敗，請稍後再試，或洽服務台 06-356-8889。','bot',true);
@@ -1333,6 +1342,79 @@ function showComingSoon(name) {
 function askChip(btn) { sendMessage(btn.textContent); }
 function handleKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }
 function autoResize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,80)+'px'; }
+
+
+// ── Intent Detection ───────────────────────────────
+function buildReplyWithContext(reply) {
+  const r = reply;
+  const specificExhibit = ['地方記憶','遊牧','轉機：','轉機特展','臺灣女子','開箱吧','桌遊特展'];
+  const exhibitKeywords = ['特展','展覽','目前有','正在展出','展出中'];
+  const mapKeywords = ['在哪裡','哪一層','樓','停車','廁所','服務台','園區','位置','怎麼走','在哪'];
+
+  const hasSpecific = specificExhibit.some(k=>r.includes(k));
+  const hasExhibit = exhibitKeywords.some(k=>r.includes(k));
+  const hasMap = mapKeywords.some(k=>r.includes(k));
+
+  if (hasSpecific || hasExhibit) {
+    const prefix = hasSpecific ? '我幫您開啟展覽資訊了，您可以參考。' : '我幫您開啟展覽列表了，您可以參考。';
+    detectAndOpenDrawer(reply);
+    return reply + ' ' + prefix;
+  } else if (hasMap) {
+    detectAndOpenDrawer(reply);
+    return reply + ' 我馬上幫你開啟園區地圖。';
+  }
+  return reply;
+}
+
+
+function detectAndOpenDrawer(reply) {
+  const r = reply;
+
+  // Exhibition intent keywords
+  const exhibitKeywords = [
+    '特展', '展覽', '地方記憶', '遊牧', '轉機', '開箱吧', '桌遊特展',
+    '展示教育大樓', '1樓大廳', '4樓', '第1特展室', '第3特展室',
+    '展覽列表', '目前有', '正在展出', '展出中', '特展室'
+  ];
+
+  // Map intent keywords  
+  const mapKeywords = [
+    '在哪裡', '哪一層', '樓', '大廳', '入口', '出口', '廁所', '停車',
+    '服務台', '哺乳室', '電梯', '樓梯', '導覽', '園區', '位置',
+    '怎麼走', '方向', '在哪', '地點', '路線'
+  ];
+
+  const hasExhibit = exhibitKeywords.some(k => r.includes(k));
+  const hasMap = mapKeywords.some(k => r.includes(k));
+
+  // Specific exhibition mentioned → open exhibit drawer expanded
+  const specificExhibit = [
+    '地方記憶', '遊牧', '轉機：', '轉機特展', '臺灣女子', '開箱吧', '桌遊特展'
+  ];
+  const hasSpecificExhibit = specificExhibit.some(k => r.includes(k));
+
+  if (hasExhibit) {
+    const msg = hasSpecificExhibit
+      ? '我幫您開啟展覽資訊了，您可以參考。'
+      : '我幫您開啟展覽列表了，您可以參考。';
+
+    // Wait for TTS to start, then open after a short delay
+    setTimeout(() => {
+      openExhibitDrawer();
+      if (hasSpecificExhibit) {
+        // Find which exhibit and auto-expand it
+        const idx = ['轉機：','臺灣女子','轉機特展'].some(k=>r.includes(k)) ? 0
+                  : ['地方記憶','遊牧'].some(k=>r.includes(k)) ? 1
+                  : ['開箱吧','桌遊'].some(k=>r.includes(k)) ? 2 : -1;
+        if (idx >= 0) openExhibitDetail(idx);
+      }
+    }, 800);
+  } else if (hasMap) {
+    setTimeout(() => {
+      openMapDrawer();
+    }, 800);
+  }
+}
 
 // ── Map ────────────────────────────────────────────
 function openMapDrawer(){document.getElementById('mapDrawer').classList.add('open');document.getElementById('mapOverlay').classList.add('open');}
