@@ -1212,15 +1212,42 @@ async function callGemini(userMessage) {
   return reply;
 }
 
+// Pending audio buffer for fallback (when context not ready)
+let pendingAudioBuf = null;
+
+async function playAudioBuf(audioBuf) {
+  const ctx = getAudioCtx();
+  // If context is not running, store for fallback
+  if (ctx.state !== 'running') {
+    pendingAudioBuf = audioBuf;
+    setOrbState('idle');
+    setVoiceLabel('點球球播放回答');
+    return;
+  }
+  if (currentSource) {
+    try { currentSource.stop(); } catch(e) {}
+    currentSource = null;
+  }
+  const source = ctx.createBufferSource();
+  source.buffer = audioBuf;
+  source.connect(ctx.destination);
+  currentSource = source;
+  source.onended = () => {
+    if (currentSource === source) currentSource = null;
+    setOrbState('idle'); setVoiceLabel('');
+    greetingText.textContent = 'Gotour AI 智慧小助手';
+    greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
+  };
+  setOrbState('speaking');
+  setVoiceLabel('說話中…');
+  source.start(0);
+}
+
 async function speakText(text) {
   if (currentSource) {
     try { currentSource.stop(); } catch(e) {}
     currentSource = null;
   }
-  // Re-confirm context is running before fetch
-  const ctx = await resumeAudioCtx();
-  setOrbState('speaking');
-  setVoiceLabel('說話中…');
   try {
     const res = await fetch(`${WORKER}/tts`, {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -1228,19 +1255,9 @@ async function speakText(text) {
     });
     if (!res.ok) throw new Error('TTS failed');
     const arrayBuf = await res.arrayBuffer();
-    // Use callback form for compatibility with older mobile browsers
-    ctx.decodeAudioData(arrayBuf, (audioBuf) => {
-      const source = ctx.createBufferSource();
-      source.buffer = audioBuf;
-      source.connect(ctx.destination);
-      currentSource = source;
-      source.onended = () => {
-        if (currentSource === source) currentSource = null;
-        setOrbState('idle'); setVoiceLabel('');
-        greetingText.textContent = 'Gotour AI 智慧小助手';
-        greetingSubtext.textContent = '可以跟我對話，或是往上滑也可以用打字的噓';
-      };
-      source.start(0);
+    const ctx = getAudioCtx();
+    ctx.decodeAudioData(arrayBuf.slice(0), (audioBuf) => {
+      playAudioBuf(audioBuf);
     }, (err) => {
       console.error('Decode error:', err);
       setOrbState('idle'); setVoiceLabel('');
@@ -1253,6 +1270,16 @@ async function speakText(text) {
 
 async function toggleRecording() {
   await resumeAudioCtx();
+
+  // If there's a pending audio buffer (iOS blocked autoplay), play it now
+  if (pendingAudioBuf) {
+    const buf = pendingAudioBuf;
+    pendingAudioBuf = null;
+    setVoiceLabel('');
+    await playAudioBuf(buf);
+    return;
+  }
+
   if (isLoading) return;
 
   if (isRecording) {
@@ -1301,15 +1328,12 @@ async function toggleRecording() {
 }
 
 async function convertToWav(blob) {
-  // Use OfflineAudioContext to avoid interfering with sharedAudioCtx
+  // Use sharedAudioCtx to decode, then OfflineAudioContext to resample
+  // This keeps us to a single AudioContext for all audio operations
   const arrayBuf = await blob.arrayBuffer();
   return new Promise((resolve, reject) => {
-    // Decode first to get duration/sampleRate info
-    const tmpCtx = new OfflineAudioContext(1, 1, 16000);
-    const decodeCtx = new (window.AudioContext || window.webkitAudioContext)();
-    decodeCtx.decodeAudioData(arrayBuf, (audioBuffer) => {
-      decodeCtx.close();
-      // Resample to 16kHz using OfflineAudioContext
+    const ctx = getAudioCtx();
+    ctx.decodeAudioData(arrayBuf.slice(0), (audioBuffer) => {
       const offlineCtx = new OfflineAudioContext(
         1,
         Math.ceil(audioBuffer.duration * 16000),
